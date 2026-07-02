@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Wedding invitation of Imran Sajawal & Dhiya Sherin — Monday, 03 August 2026, Hayath Auditorium, Cherumukku." />
+<meta name="theme-color" content="#F6F3EC" />
+<title>Imran &amp; Dhiya — Wedding Invitation</title>
+
+<!--
+  =====================================================================
+  WEDDING INVITATION — Imran Sajawal & Dhiya Sherin
+  Design: "Sage & Linen — Botanical Editorial" (light, airy, modern)
+  Single self-contained file. Inline CSS + vanilla JS.
+  No frameworks. No build step. Works offline once fonts are cached.
+  No localStorage / sessionStorage — all state lives in JS variables.
+  =====================================================================
+
+  QUICK-EDIT: All customizable values live in the CONFIG block at the
+  top of <script> (search for "const CONFIG"). Colors live in the
+  :root CSS variables near the top of <style>.
+-->
+
+<!-- Google Fonts (only external dependency, loaded via <link>) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&family=Amiri:wght@400;700&display=swap"
+  rel="stylesheet"
+/>
+
+<!-- Favicon: inline 8-point Khatam star mark (no external request) -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23F6F3EC'/%3E%3Cg fill='none' stroke='%236E8B74' stroke-width='1.4'%3E%3Crect x='7' y='7' width='18' height='18'/%3E%3Crect x='7' y='7' width='18' height='18' transform='rotate(45 16 16)'/%3E%3C/g%3E%3C/svg%3E" />
+
+<style>
+  /* =====================================================================
+     1. DESIGN TOKENS  (edit palette here)
+     ===================================================================== */
+  :root {
+    /* --- Palette --- */
+    --bg:            #F6F3EC; /* warm linen base */
+    --surface:       #FFFFFF; /* card / panel */
+    --surface-alt:   #EEF2EC; /* sage-tinted alternating panel */
+    --primary:       #6E8B74; /* decorative sage: large headings, borders, fills */
+    --primary-strong:#46654F; /* button fill w/ white text (AA) */
+    --secondary:     #1F5F5B; /* deep muted teal: primary buttons, links */
+    --secondary-deep:#164E4A; /* teal hover / high-emphasis */
+    --blush:         #E8D2CC; /* warm tint & hover wash (decorative) */
+    --blush-dark:    #9E5A66; /* AA-safe blush for links / ghost text */
+    --gold:          #A98B4E; /* champagne gold — HAIRLINES & SVG STROKES ONLY */
+    --ink:           #2E332E; /* primary body & display text */
+    --muted:         #54604F; /* captions, meta, labels */
+    --hairline:      #E4DCCF; /* neutral border */
+
+    /* --- Type --- */
+    --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --sans:  'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --arabic:'Amiri', 'Cormorant Garamond', serif;
+
+    /* --- Shape --- */
+    --arch: 4px 4px 22px 22px;   /* asymmetric mihrab-arch corner */
+    --radius: 18px;
+    --shadow: 0 8px 30px rgba(46,51,46,.06);
+    --shadow-lg: 0 14px 44px rgba(46,51,46,.10);
+
+    /* --- Rhythm --- */
+    --section-pad: clamp(3rem, 10vw, 7.5rem);
+    --gutter: clamp(1.25rem, 6vw, 3rem);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* Fixed-nav height — used for scroll offsets so anchored headings
+       are never hidden behind the sticky bar. ~64px clears the .scrolled bar. */
+    --nav-h: 64px;
+  }
+
+  /* =====================================================================
+     2. RESET / BASE
+     ===================================================================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html {
+    scroll-behavior: smooth; -webkit-text-size-adjust: 100%;
+    /* Offset in-page anchor jumps so headings clear the fixed nav. */
+    scroll-padding-top: var(--nav-h);
+    max-width: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: clamp(1rem, 0.96rem + 0.2vw, 1.075rem);
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+    overflow-x: hidden;
+    max-width: 100%;
+    /* Global safety net: long tokens/URLs wrap instead of being clipped. */
+    overflow-wrap: break-word;
+  }
+  /* All embedded media stays within its container. */
+  img, iframe, svg, video { max-width: 100%; }
+  img { display: block; }
+  /* Monospace config tokens / long strings wrap rather than overflow. */
+  code { overflow-wrap: anywhere; word-break: break-word; }
+  /* Runtime-injected text (addresses, URLs, cities, echoed input) can never
+     widen a card past the viewport — long tokens/URLs wrap instead of clipping. */
+  .person__lineage, .travel-out, .info-card p, .detail-list .v,
+  .map-placeholder, .wish__text, .form-status {
+    overflow-wrap: anywhere; word-break: break-word;
+  }
+
+  /* Anchored sections get a scroll offset so their eyebrow/title is not
+     hidden under the fixed nav after any in-page jump. */
+  .hero, .section, [id] { scroll-margin-top: var(--nav-h); }
+  a { color: var(--secondary); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { color: var(--secondary-deep); }
+
+  h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.12; margin: 0; }
+
+  /* Visible, consistent focus for keyboard users */
+  :focus-visible {
+    outline: 2px solid var(--secondary);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+  /* Skip link */
+  .skip-link {
+    position: absolute; left: 50%; top: -60px; transform: translateX(-50%);
+    background: var(--secondary); color: #fff; padding: .6rem 1.1rem;
+    border-radius: 0 0 10px 10px; z-index: 200; transition: top .2s var(--ease);
+    text-decoration: none;
+  }
+  .skip-link:focus { top: 0; color:#fff; }
+
+  /* =====================================================================
+     3. LAYOUT HELPERS
+     ===================================================================== */
+  .section { padding: var(--section-pad) var(--gutter); position: relative; }
+  .section--alt  { background: var(--surface-alt); }
+  .section--white{ background: var(--surface); }
+  .wrap      { max-width: 720px; margin-inline: auto; }
+  .wrap--wide{ max-width: 960px; margin-inline: auto; }
+  .center { text-align: center; }
+
+  /* Section header: eyebrow + star flourish + gold rule + title */
+  .eyebrow {
+    font-family: var(--sans);
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    margin: 0 0 .9rem;
+  }
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 1.4rem + 3vw, 3.1rem);
+    color: var(--primary);
+    margin: 0;
+  }
+  .section--white .section-title,
+  .section--alt   .section-title { color: var(--secondary); }
+
+  /* Star flourish above headings (stroke-only) */
+  .flourish { display: block; margin: 0 auto .55rem; }
+  /* Motifs scale gently with the section title (SVGs have viewBox, so clean). */
+  .flourish svg { display: block; margin: 0 auto; width: clamp(24px, 3.2vw, 34px); height: auto; }
+  .footer__mark svg { width: clamp(26px, 4vw, 36px); height: auto; }
+  /* Centered gold rule interrupted by a small star/diamond */
+  .rule {
+    display: flex; align-items: center; justify-content: center; gap: .8rem;
+    margin: 1rem auto 1.6rem; max-width: 240px;
+  }
+  .rule::before, .rule::after {
+    content: ""; height: 1px; flex: 1; background: var(--gold); opacity: .7;
+  }
+  .rule .diamond { width: 7px; height: 7px; background: var(--primary); transform: rotate(45deg); }
+  .lede { color: var(--muted); font-size: 1.08rem; }
+  /* Comfortable reading measure (~60-70ch) for long centered prose on wide
+     tablets/desktop; no effect on phones where the container is already narrow. */
+  #invitation .wrap > p, .lede { max-width: 62ch; margin-inline: auto; }
+
+  /* =====================================================================
+     4. BUTTONS
+     ===================================================================== */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    font-family: var(--sans); font-weight: 500; font-size: .92rem;
+    letter-spacing: .04em; text-transform: uppercase;
+    padding: .85rem 1.6rem; border-radius: var(--arch);
+    border: 1px solid transparent; cursor: pointer; text-decoration: none;
+    transition: background .25s var(--ease), color .25s var(--ease),
+                border-color .25s var(--ease), transform .15s var(--ease);
+    line-height: 1;
+    /* Guarantee a comfortable 44px touch target on phones. */
+    min-height: 44px;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn--primary   { background: var(--secondary); color: #fff; }
+  .btn--primary:hover { background: var(--secondary-deep); color:#fff; }
+  .btn--sage      { background: var(--primary-strong); color: #fff; }
+  .btn--sage:hover{ background: #3a5541; color:#fff; }
+  .btn--ghost     { background: transparent; color: var(--blush-dark); border-color: var(--blush-dark); }
+  /* Hover: darken text to keep >=4.5:1 contrast on the blush wash (#E8D2CC) */
+  .btn--ghost:hover { background: var(--blush); color: var(--secondary-deep); border-color: var(--secondary-deep); }
+  .btn-row { display: flex; flex-wrap: wrap; gap: .9rem; justify-content: center; }
+
+  /* =====================================================================
+     5. CARDS
+     ===================================================================== */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: clamp(1.6rem, 4vw, 2.6rem);
+    position: relative;
+  }
+  .card--arch { border-radius: var(--arch); }
+  /* Printed-plate corner ticks (top corners) */
+  .card--ticks::before, .card--ticks::after {
+    content: ""; position: absolute; width: 16px; height: 16px; top: 12px;
+    pointer-events: none;
+  }
+  .card--ticks::before { left: 12px;  border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+  .card--ticks::after  { right: 12px; border-top: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+
+  /* Girih line-lattice texture (behind Invitation + Footer only) */
+  .lattice { position: relative; }
+  .lattice::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%236E8B74' stroke-width='1'%3E%3Crect x='24' y='24' width='32' height='32'/%3E%3Crect x='24' y='24' width='32' height='32' transform='rotate(45 40 40)'/%3E%3Cpath d='M0 40h80M40 0v80'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 80px 80px;
+  }
+  .lattice > * { position: relative; z-index: 1; }
+
+  /* =====================================================================
+     6. NAVIGATION
+     ===================================================================== */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .85rem var(--gutter);
+    background: rgba(246,243,236,0.72);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    transition: background .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease);
+    border-bottom: 1px solid transparent;
+  }
+  .nav.scrolled {
+    background: rgba(246,243,236,0.94);
+    border-bottom: 1px solid var(--gold);
+    box-shadow: 0 4px 18px rgba(46,51,46,.06);
+  }
+  .nav__brand {
+    font-family: var(--serif); font-size: 1.25rem; font-weight: 600;
+    color: var(--secondary); text-decoration: none; letter-spacing: .02em;
+    display: inline-flex; align-items: center; gap: .5rem;
+  }
+  .nav__brand svg { flex: none; }
+  .nav__links { display: flex; align-items: center; gap: 1.3rem; list-style: none; margin: 0; padding: 0; }
+  .nav__links a {
+    font-family: var(--sans); font-size: .82rem; text-transform: uppercase;
+    letter-spacing: .12em; color: var(--ink); text-decoration: none; font-weight: 400;
+    padding: .3rem 0; position: relative;
+  }
+  .nav__links a:hover, .nav__links a.active { color: var(--secondary); }
+  .nav__links a.active::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px; background: var(--secondary);
+  }
+  .nav__toggle {
+    display: none; background: none; border: 0; cursor: pointer;
+    width: 44px; height: 44px; padding: 10px; border-radius: 8px;
+  }
+  .nav__toggle span { display: block; height: 2px; background: var(--ink); border-radius: 2px; margin: 4px 0; transition: transform .3s var(--ease), opacity .3s var(--ease); }
+  .nav__toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .nav__toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .nav__toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  /* Hamburger covers the whole band the 8 inline links cannot fit (up to
+     ~1080px small-desktop/tablet), preventing crushed/clipped nav text. */
+  @media (max-width: 1080px) {
+    .nav__toggle { display: block; }
+    .nav__links {
+      position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; gap: 0;
+      background: rgba(246,243,236,0.98);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--gold);
+      border-radius: 0 0 var(--radius) var(--radius);
+      max-height: 0; visibility: hidden;
+      /* Scroll inside the panel on short landscape instead of clipping links. */
+      overflow-y: auto; overflow-x: hidden;
+      overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+      transition: max-height .35s var(--ease), visibility .35s var(--ease);
+    }
+    /* Fill the space below the bar; the list scrolls if taller than the viewport. */
+    .nav__links.open {
+      max-height: min(80vh, calc(100svh - 3.6rem));
+      visibility: visible; box-shadow: var(--shadow-lg);
+    }
+    .nav__links li { width: 100%; text-align: center; }
+    .nav__links a { display: block; padding: .95rem 0; border-top: 1px solid var(--hairline); }
+    .nav__links li:first-child a { border-top: 0; }
+  }
+
+  /* =====================================================================
+     7. ENTRANCE LOADER  ("Star-Draw & Horizon")
+     ===================================================================== */
+  #loader {
+    position: fixed; inset: 0; z-index: 300;
+    background: var(--bg);
+    display: grid; place-items: center;
+    transition: opacity .6s var(--ease), filter .6s var(--ease);
+  }
+  #loader.hide { opacity: 0; filter: blur(6px); pointer-events: none; }
+  #loader.gone { display: none; }
+  .loader-stage { position: relative; width: min(70vw, 320px); aspect-ratio: 1; display: grid; place-items: center; }
+  .loader-star { position: relative; z-index: 2; width: 46%; }
+  .loader-star svg { width: 100%; height: auto; overflow: visible; }
+  .loader-circle {
+    position: absolute; inset: 22%; z-index: 1; border-radius: 50%;
+    background: var(--primary); opacity: .14;
+    transform: scale(.9); animation: circleIn 1.3s var(--ease) forwards;
+  }
+  @keyframes circleIn { to { transform: scale(1); } }
+  /* Horizon line ruled across the viewport through star center */
+  .loader-horizon {
+    position: absolute; left: 0; right: 0; top: 50%; height: 1px; z-index: 1;
+    background: var(--gold); transform: scaleX(0); transform-origin: left center;
+    animation: rule 0.9s var(--ease) 1.15s forwards;
+  }
+  @keyframes rule { to { transform: scaleX(1); } }
+  /* Self-drawing star strokes */
+  .draw-path { stroke: var(--gold); stroke-width: 1.5; fill: none;
+    stroke-dasharray: 400; stroke-dashoffset: 400;
+    animation: drawStar 1.3s var(--ease) forwards, breathe 1.2s var(--ease) 1.3s; }
+  @keyframes drawStar { to { stroke-dashoffset: 0; } }
+  @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+
+  /* =====================================================================
+     8. HERO
+     ===================================================================== */
+  .hero {
+    min-height: 100svh; display: grid; place-items: center;
+    text-align: center;
+    /* Viewport-aware vertical padding so short landscape phones don't clip. */
+    padding: clamp(4.5rem, 10vh, 6rem) var(--gutter) clamp(2rem, 6vh, 4rem);
+    position: relative; overflow: hidden;
+  }
+  /* Optional hero photo layer (only shows if CONFIG.heroPhotoUrl set) */
+  .hero__photo {
+    position: absolute; inset: 0; background-size: cover; background-position: center;
+    opacity: 0; z-index: 0;
+  }
+  .hero__photo.on { opacity: .16; }
+  .hero__inner { position: relative; z-index: 1; max-width: 760px; }
+  .bismillah {
+    font-family: var(--arabic); font-size: clamp(2.4rem, 7vw, 4rem);
+    color: var(--secondary); line-height: 1; margin-bottom: 1.4rem; direction: rtl;
+  }
+  .hero__eyebrow { color: var(--muted); letter-spacing: .35em; text-transform: uppercase; font-size: .74rem; margin-bottom: 1.5rem; }
+  .hero__names {
+    font-family: var(--serif); font-weight: 500;
+    /* Slightly lower floor gives 320px breathing room if a wide fallback
+       font loads before Cormorant; global overflow-wrap guards the rest. */
+    font-size: clamp(2.6rem, 8vw + 1rem, 6rem); color: var(--ink);
+    line-height: 1.02; margin: 0;
+  }
+  .hero__names .amp { font-style: italic; font-weight: 400; color: var(--primary); display: inline-block; padding: 0 .15em; }
+  .hero__sprig { display: block; margin: 1rem auto; width: clamp(110px, 22vw, 150px); height: auto; }
+  .hero__meta { font-family: var(--sans); font-weight: 400; letter-spacing: .06em; color: var(--muted); margin-top: 1rem; font-size: 1.05rem; }
+  .hero__meta strong { color: var(--ink); font-weight: 500; }
+  .hero__intro { max-width: 34rem; margin: 1.6rem auto 0; color: var(--muted); font-style: italic; font-family: var(--serif); font-size: 1.35rem; }
+  .hero__horizon { width: min(80%, 420px); height: 1px; background: var(--gold); opacity: .6; margin: 2rem auto 0; }
+  .scroll-cue { margin-top: 2.4rem; display: inline-flex; flex-direction: column; align-items: center; gap: .4rem; color: var(--muted); font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; background:none;border:0; cursor:pointer; font-family:var(--sans);}
+  .scroll-cue .chev { width: 14px; height: 14px; border-right: 1px solid var(--primary); border-bottom: 1px solid var(--primary); transform: rotate(45deg); animation: bob 1.8s var(--ease) infinite; }
+  @keyframes bob { 0%,100% { transform: rotate(45deg) translate(0,0);} 50% { transform: rotate(45deg) translate(3px,3px);} }
+
+  /* Short landscape phones: let the hero grow from the top and scroll with the
+     page instead of grid-centering a tall stack under overflow:hidden (which
+     would clip the bismillah/eyebrow). Drop the non-essential scroll cue. */
+  @media (max-height: 640px) and (orientation: landscape) {
+    .hero { min-height: auto; place-items: start center;
+            padding-top: 5rem; padding-bottom: 2.5rem; }
+    .hero .scroll-cue { display: none; }
+    .hero__names { font-size: clamp(2.4rem, 6vw, 3.4rem); }
+    .bismillah { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: .9rem; }
+    .hero__intro { margin-top: 1.1rem; }
+    .hero__horizon { margin-top: 1.4rem; }
+  }
+  /* Very short viewports (e.g. iPhone SE landscape) regardless of orientation. */
+  @media (max-height: 520px) {
+    .hero { min-height: auto; padding-top: 5rem; }
+  }
+
+  /* Hero stagger (played once after loader) */
+  .hero .stagger { opacity: 0; transform: translateY(16px); }
+  .hero.reveal .stagger { animation: fadeUp .7s var(--ease) forwards; }
+  .hero.reveal .stagger:nth-child(1){ animation-delay: .05s; }
+  .hero.reveal .stagger:nth-child(2){ animation-delay: .16s; }
+  .hero.reveal .stagger:nth-child(3){ animation-delay: .27s; }
+  .hero.reveal .stagger:nth-child(4){ animation-delay: .38s; }
+  .hero.reveal .stagger:nth-child(5){ animation-delay: .49s; }
+  .hero.reveal .stagger:nth-child(6){ animation-delay: .60s; }
+  .hero.reveal .stagger:nth-child(7){ animation-delay: .71s; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  /* =====================================================================
+     9. COUNTDOWN
+     ===================================================================== */
+  /* Responsive grid: 4-up on wide, a clean equal-column 2×2 on narrow phones.
+     min-width:0 lets tiles shrink so nothing can overflow at 320px. */
+  .countdown {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    justify-items: center; max-width: 520px; margin: 1rem auto 0;
+  }
+  .cd-tile {
+    min-width: 0; width: 100%; padding: 1.2rem 1rem; text-align: center; position: relative;
+  }
+  .cd-tile + .cd-tile::before {
+    content: ""; position: absolute; left: 0; top: 20%; bottom: 20%; width: 1px; background: var(--gold); opacity: .6;
+  }
+  /* Narrow phones: 2×2 with breathing room; hide the stray divider that would
+     otherwise appear on the first tile of the second row. */
+  @media (max-width: 420px) {
+    .countdown { grid-template-columns: repeat(2, 1fr); row-gap: .4rem; }
+    .cd-tile { padding: 1rem .5rem; }
+    .cd-tile:nth-child(odd)::before { display: none; }
+  }
+  .cd-num { font-family: var(--sans); font-weight: 300; font-size: clamp(2.4rem, 8vw, 3.6rem); color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+  .cd-lab { font-family: var(--sans); text-transform: uppercase; letter-spacing: .18em; font-size: .72rem; color: var(--muted); margin-top: .5rem; }
+  .cd-done { font-family: var(--serif); font-size: 1.5rem; color: var(--secondary); font-style: italic; }
+
+  /* =====================================================================
+     10. COUPLE / FAMILIES
+     ===================================================================== */
+  .couple-grid { display: grid; gap: 1.6rem; grid-template-columns: 1fr; margin-top: 1rem; }
+  /* Go 3-up only when there's comfortable room (>=820px); tablet-portrait 768px
+     keeps the roomier stacked layout. The amp gets a small guaranteed track. */
+  @media (min-width: 820px) {
+    .couple-grid {
+      grid-template-columns: 1fr minmax(2.5rem, auto) 1fr;
+      align-items: center; column-gap: clamp(1rem, 3vw, 2.4rem);
+    }
+  }
+  .person { text-align: center; }
+  .person__name { font-family: var(--serif); font-size: clamp(2rem, 5vw, 2.6rem); color: var(--primary); margin-bottom: .5rem; }
+  .section--white .person__name { color: var(--secondary); }
+  .person__role { text-transform: uppercase; letter-spacing: .2em; font-size: .72rem; color: var(--muted); margin-bottom: .9rem; }
+  .person__lineage { color: var(--muted); font-size: .98rem; line-height: 1.75; }
+  .person__lineage strong { color: var(--ink); font-weight: 500; }
+  .couple-amp { font-family: var(--serif); font-style: italic; font-size: 2.4rem; color: var(--gold); }
+  @media (max-width: 819px){ .couple-amp { padding: .4rem 0; } }
+
+  /* =====================================================================
+     11. EVENT DETAILS + MAP
+     ===================================================================== */
+  .detail-list { list-style: none; margin: 0 0 1.6rem; padding: 0; display: grid; gap: 1.1rem; }
+  .detail-list li { display: flex; gap: .95rem; align-items: flex-start; }
+  .detail-list .ic { flex: none; margin-top: .15rem; color: var(--primary); }
+  .detail-list .k { display: block; text-transform: uppercase; letter-spacing: .16em; font-size: .7rem; color: var(--muted); }
+  .detail-list .v { color: var(--ink); font-size: 1.08rem; }
+  .map-frame {
+    border: 1px solid var(--gold); border-radius: var(--radius); overflow: hidden;
+    margin-top: 1.5rem; background: var(--surface-alt); aspect-ratio: 16/10;
+  }
+  .map-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .map-placeholder { width: 100%; height: 100%; display: grid; place-items: center; text-align: center; color: var(--muted); padding: 2rem; }
+  /* Narrow phones: taller ratio for a usable preview + roomier code text. */
+  @media (max-width: 480px) {
+    .map-frame { aspect-ratio: 4 / 3; }
+    .map-placeholder { padding: 1.2rem; }
+  }
+
+  /* =====================================================================
+     12. TRAVEL
+     ===================================================================== */
+  .field { margin-bottom: 1.3rem; }
+  .field label { display: block; font-size: .78rem; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); margin-bottom: .5rem; }
+  .input, .textarea, select.input {
+    width: 100%; font-family: var(--sans); font-size: 1rem; color: var(--ink);
+    background: transparent; border: 0; border-bottom: 1px solid var(--hairline);
+    padding: .6rem .1rem; transition: border-color .25s var(--ease), box-shadow .25s var(--ease);
+  }
+  .input:focus, .textarea:focus, select.input:focus {
+    outline: none; border-bottom-color: var(--primary); box-shadow: 0 1px 0 0 var(--primary);
+  }
+  .textarea { resize: vertical; min-height: 96px; border: 1px solid var(--hairline); border-radius: 10px; padding: .75rem; }
+  .textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(110,139,116,.18); }
+  .travel-out { margin-top: 1.2rem; padding: 1.1rem 1.2rem; background: var(--surface-alt); border-radius: var(--arch); border: 1px solid var(--hairline); color: var(--ink); }
+  .travel-out[hidden] { display: none; }
+  /* auto-fit: 1 column when narrow, 2 only when each card can breathe (>=260px),
+     so there's no cramped mid-band at common landscape-phone widths. */
+  .info-grid {
+    display: grid; gap: 1rem; margin-top: 1.6rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .info-card { background: var(--surface-alt); border: 1px solid var(--hairline); border-radius: var(--arch); padding: 1.2rem 1.3rem; }
+  .info-card h3 { font-family: var(--sans); font-weight: 500; text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; color: var(--secondary); margin-bottom: .5rem; }
+  .info-card p { margin: 0; color: var(--muted); font-size: .98rem; }
+
+  /* =====================================================================
+     13. FORMS (RSVP + WISHES)
+     ===================================================================== */
+  .form-grid { display: grid; gap: 1.2rem; grid-template-columns: 1fr; }
+  /* Split paired fields only where both cells are wide enough (>=680px); at
+     600-679px the radio row would otherwise wrap next to a short input.
+     align-items:start keeps the shorter field from stretching. */
+  @media (min-width: 680px){
+    .form-grid .col-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; align-items: start; }
+  }
+  .radio-row { display: flex; gap: 1.4rem; flex-wrap: wrap; margin-top: .3rem; }
+  .radio-row label { display: inline-flex; align-items: center; gap: .5rem; text-transform: none; letter-spacing: 0; font-size: 1rem; color: var(--ink); cursor: pointer; }
+  .radio-row input { accent-color: var(--secondary); width: 18px; height: 18px; flex: none; }
+  @media (max-width: 360px){ .radio-row { gap: .9rem 1rem; } }
+  .form-note { font-size: .86rem; color: var(--muted); margin-top: 1rem; }
+  .form-status { margin-top: 1.2rem; padding: 1rem 1.2rem; border-radius: var(--arch); background: var(--surface-alt); border: 1px solid var(--primary); color: var(--ink); }
+  .form-status[hidden] { display: none; }
+
+  /* =====================================================================
+     14. WISHES WALL
+     ===================================================================== */
+  .wishes-list { list-style: none; margin: 2rem 0 0; padding: 0; display: grid; gap: 1rem; }
+  .wish {
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--arch);
+    padding: 1.1rem 1.3rem; box-shadow: var(--shadow); animation: fadeUp .5s var(--ease);
+  }
+  .wish__text { font-family: var(--serif); font-size: 1.2rem; color: var(--ink); font-style: italic; margin: 0 0 .5rem; }
+  .wish__by { font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+  .wishes-empty { color: var(--muted); font-style: italic; text-align: center; margin-top: 1.6rem; }
+
+  /* =====================================================================
+     15. SAVE THE DATE
+     ===================================================================== */
+  .std-card { text-align: center; }
+  .std-date { font-family: var(--serif); font-size: clamp(2.2rem, 6vw, 3.2rem); color: var(--secondary); margin: .5rem 0 .3rem; }
+
+  /* =====================================================================
+     16. FOOTER
+     ===================================================================== */
+  .footer { text-align: center; padding: clamp(3.5rem, 8vw, 5.5rem) var(--gutter); background: var(--surface-alt); position: relative; }
+  .footer__rule { width: min(70%, 380px); height: 1px; background: var(--gold); opacity: .6; margin: 0 auto 2rem; }
+  .footer__names { font-family: var(--serif); font-size: clamp(2rem, 5vw, 2.8rem); color: var(--ink); margin-bottom: .6rem; }
+  .footer__names .amp { font-style: italic; color: var(--primary); }
+  .footer__bless { color: var(--muted); font-style: italic; font-family: var(--serif); font-size: 1.25rem; margin-bottom: 1.4rem; }
+  .footer__closing { font-size: .82rem; text-transform: uppercase; letter-spacing: .18em; color: var(--muted); }
+  .footer__mark { margin: 1.6rem auto 0; }
+
+  /* =====================================================================
+     17. SCROLL REVEAL
+     ===================================================================== */
+  .reveal-el { opacity: 0; transform: translateY(20px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+  .reveal-el.in { opacity: 1; transform: translateY(0); }
+  /* small stagger for children when a container is in view */
+  .in .reveal-child { animation: fadeUp .6s var(--ease) both; }
+  .in .reveal-child:nth-child(2){ animation-delay: .08s; }
+  .in .reveal-child:nth-child(3){ animation-delay: .16s; }
+  .in .reveal-child:nth-child(4){ animation-delay: .24s; }
+
+  /* Screen-reader only */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* =====================================================================
+     18. REDUCED MOTION — disable/reduce ALL animation incl. loader
+     ===================================================================== */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+    .draw-path { stroke-dashoffset: 0 !important; }
+    .loader-circle { transform: scale(1) !important; }
+    .loader-horizon { transform: scaleX(1) !important; }
+    .hero.reveal .stagger { opacity: 1 !important; transform: none !important; animation: none !important; }
+    .hero .stagger { opacity: 1 !important; transform: none !important; }
+    .reveal-el { opacity: 1 !important; transform: none !important; }
+    .wish, .in .reveal-child { animation: none !important; }
+    .scroll-cue .chev { animation: none !important; }
+  }
+</style>
+</head>
+
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- =====================================================================
+     ENTRANCE LOADER — "Star-Draw & Horizon" (first load only)
+     ===================================================================== -->
+<div id="loader" role="presentation" aria-hidden="true">
+  <div class="loader-stage">
+    <div class="loader-circle"></div>
+    <div class="loader-horizon"></div>
+    <div class="loader-star">
+      <!-- 8-point Khatam / rub-el-hizb star = two overlapping squares -->
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <rect class="draw-path" x="20" y="20" width="60" height="60"></rect>
+        <rect class="draw-path" x="20" y="20" width="60" height="60" transform="rotate(45 50 50)"></rect>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================================
+     NAV
+     ===================================================================== -->
+<header>
+  <nav class="nav" id="nav" aria-label="Primary">
+    <a class="nav__brand" href="#hero" aria-label="Imran and Dhiya — top of page">
+      <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
+        <g fill="none" stroke="var(--primary)" stroke-width="1.4">
+          <rect x="7" y="7" width="18" height="18"></rect>
+          <rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"></rect>
+        </g>
+      </svg>
+      <span>I&nbsp;&amp;&nbsp;D</span>
+    </a>
+
+    <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nav__links" id="navLinks">
+      <li><a href="#countdown">Countdown</a></li>
+      <li><a href="#invitation">Invitation</a></li>
+      <li><a href="#couple">Couple</a></li>
+      <li><a href="#details">Details</a></li>
+      <li><a href="#travel">Travel</a></li>
+      <li><a href="#rsvp">RSVP</a></li>
+      <li><a href="#save">Save the Date</a></li>
+      <li><a href="#wishes">Wishes</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- =================================================================
+       1. HERO
+       ================================================================= -->
+  <section class="hero" id="hero" aria-labelledby="hero-names">
+    <div class="hero__photo" id="heroPhoto" aria-hidden="true"></div>
+    <div class="hero__inner">
+      <!-- Bismillah opens the invitation (U+FDFD) -->
+      <p class="bismillah stagger" lang="ar" aria-label="Bismillah ir-Rahman ir-Rahim — In the name of God, the Most Gracious, the Most Merciful">&#xFDFD;</p>
+      <p class="hero__eyebrow stagger">Together with their families</p>
+      <h1 class="hero__names stagger" id="hero-names">
+        Imran <span class="amp" aria-hidden="true">&amp;</span><span class="sr-only">and</span> Dhiya
+      </h1>
+      <!-- single-stroke leaf sprig flanking the names -->
+      <svg class="hero__sprig stagger" width="120" height="20" viewBox="0 0 120 20" aria-hidden="true">
+        <g fill="none" stroke="var(--primary)" stroke-width="1" stroke-linecap="round">
+          <path d="M2 10h40"></path>
+          <path d="M60 4c-8 0-14 6-18 6 4 0 10 6 18 6 8 0 14-6 18-6-4 0-10-6-18-6z"></path>
+          <path d="M78 10h40"></path>
+          <path d="M60 3v14"></path>
+        </g>
+      </svg>
+      <p class="hero__meta stagger">
+        <strong>Monday, 03 August 2026</strong><br />
+        Hayath Auditorium, Cherumukku
+      </p>
+      <p class="hero__intro stagger">
+        We invite you, with joy and gratitude, to share in the blessing of our wedding — Insha Allah.
+      </p>
+      <div class="hero__horizon stagger" aria-hidden="true"></div>
+      <button class="scroll-cue stagger" type="button" data-scroll="#countdown" aria-label="Scroll to countdown">
+        Scroll
+        <span class="chev" aria-hidden="true"></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       2. COUNTDOWN
+       ================================================================= -->
+  <section class="section section--white" id="countdown" aria-labelledby="countdown-title">
+    <div class="wrap center reveal-el">
+      <span class="flourish" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 32 32"><g fill="none" stroke="var(--primary)" stroke-width="1.3"><rect x="7" y="7" width="18" height="18"></rect><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"></rect></g></svg>
+      </span>
+      <p class="eyebrow">Counting the days</p>
+      <h2 class="section-title" id="countdown-title">Until we celebrate</h2>
+      <div class="rule" aria-hidden="true"><span class="diamond"></span></div>
+
+      <div class="countdown" id="countdown-clock" role="timer" aria-label="Time remaining until the wedding">
+        <div class="cd-tile"><div class="cd-num" id="cd-days">--</div><div class="cd-lab">Days</div></div>
+        <div class="cd-tile"><div class="cd-num" id="cd-hours">--</div><div class="cd-lab">Hours</div></div>
+        <div class="cd-tile"><div class="cd-num" id="cd-mins">--</div><div class="cd-lab">Minutes</div></div>
+        <div class="cd-tile"><div class="cd-num" id="cd-secs">--</div><div class="cd-lab">Seconds</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       3. INVITATION MESSAGE
+       ================================================================= -->
+  <section class="section section--alt lattice" id="invitation" aria-labelledby="invitation-title">
+    <div class="wrap center reveal-el">
+      <span class="flourish" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 32 32"><g fill="none" stroke="var(--secondary)" stroke-width="1.3"><rect x="7" y="7" width="18" height="18"></rect><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"></rect></g></svg>
+      </span>
+      <p class="eyebrow">With hearts full of gratitude</p>
+      <h2 class="section-title" id="invitation-title">Our Invitation</h2>
+      <div class="rule" aria-hidden="true"><span class="diamond"></span></div>
+
+      <p style="font-family:var(--serif); font-size:1.4rem; color:var(--ink); line-height:1.7;">
+        <span lang="ar" style="font-family:var(--arabic); font-size:1.6rem; color:var(--secondary);" aria-label="Bismillah">&#xFDFD;</span><br /><br />
+        <strong style="font-weight:500;">Mr. Mohamed Iqbal</strong> &amp; <strong style="font-weight:500;">Mrs. Sajitha</strong>
+        <br />request the honour of your presence at the wedding of their son
+        <br /><em style="color:var(--primary);">Imran Sajawal</em>
+        <br />with
+        <br /><em style="color:var(--primary);">Dhiya Sherin</em>
+      </p>
+
+      <p class="lede" style="margin-top:1.4rem;">
+        Your prayers and blessings on this joyous occasion would mean the world to us —
+        <span lang="ar" style="font-family:var(--arabic); color:var(--secondary); font-size:1.15rem;">Insha Allah</span>.
+      </p>
+
+      <p style="font-family:var(--serif); font-style:italic; font-size:1.25rem; color:var(--muted); margin-top:1.6rem;">
+        With wishes and prayers: Family &amp; Friends
+      </p>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       4. THE COUPLE / FAMILIES
+       ================================================================= -->
+  <section class="section section--white" id="couple" aria-labelledby="couple-title">
+    <div class="wrap--wide center reveal-el">
+      <p class="eyebrow">Two families, one blessing</p>
+      <h2 class="section-title" id="couple-title">The Couple</h2>
+      <div class="rule" aria-hidden="true"><span class="diamond"></span></div>
+
+      <div class="couple-grid">
+        <div class="person">
+          <h3 class="person__name">Imran Sajawal</h3>
+          <p class="person__role">The Groom</p>
+          <p class="person__lineage">
+            Grand son of <strong>Kuttyil Alavi</strong> &amp; <strong>Abdul Rahman</strong><br />
+            Son of <strong>Mr. Mohamed Iqbal</strong> &amp; <strong>Mrs. Sajitha</strong><br />
+            Kuttyil (H), TC KC Link Road,<br />P.O Tirurangadi
+          </p>
+        </div>
+
+        <div class="couple-amp" aria-hidden="true">&amp;</div>
+
+        <div class="person">
+          <h3 class="person__name">Dhiya Sherin</h3>
+          <p class="person__role">The Bride</p>
+          <p class="person__lineage">
+            Daughter of <strong>Mr. Abdu Nazar V</strong> &amp; <strong>Mrs. Souda</strong><br />
+            Valappil (H), Mavoor,<br />Kozhikode
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       5. EVENT DETAILS + MAP
+       ================================================================= -->
+  <section class="section section--alt" id="details" aria-labelledby="details-title">
+    <div class="wrap--wide reveal-el">
+      <div class="center">
+        <p class="eyebrow">When &amp; where</p>
+        <h2 class="section-title" id="details-title">Event Details</h2>
+        <div class="rule" aria-hidden="true"><span class="diamond"></span></div>
+      </div>
+
+      <div class="card card--arch card--ticks">
+        <ul class="detail-list">
+          <li>
+            <svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="3" y="4.5" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2.5v4M16 2.5v4"></path></svg>
+            <div><span class="k">Date</span><span class="v">Monday, 03 August 2026</span></div>
+          </li>
+          <li>
+            <svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+            <div><span class="k">Time</span><span class="v">11:00 AM &ndash; 3:00 PM</span></div>
+          </li>
+          <li>
+            <svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+            <div><span class="k">Venue</span><span class="v">Hayath Auditorium, Cherumukku</span></div>
+          </li>
+          <li>
+            <svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4.5 5.5c0 8 6 14 14 14 .8 0 1.5-.7 1.5-1.5v-2.6c0-.7-.5-1.3-1.2-1.5l-2.6-.5c-.6-.1-1.2.1-1.5.6l-.7 1c-2.3-1.1-4.2-3-5.3-5.3l1-.7c.5-.3.7-.9.6-1.5l-.5-2.6C9.4 4.5 8.8 4 8.1 4H5.5C4.7 4 4 4.7 4 5.5z"></path></svg>
+            <div><span class="k">Contact</span><span class="v" id="contactNumbers"></span></div>
+          </li>
+        </ul>
+
+        <!-- MAP -->
+        <div class="map-frame">
+          <!-- TODO: Replace the placeholder below with the venue's Google Maps EMBED iframe.
+               Paste from Google Maps -> Share -> Embed a map -> copy the <iframe> src into CONFIG.mapsEmbedUrl.
+               The script injects it into #mapEmbed on load. -->
+          <div id="mapEmbed" class="map-placeholder">
+            <div>
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.2" aria-hidden="true" style="margin:0 auto .6rem;"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+              <p style="margin:0;">Map preview — add the Google Maps embed link in <code>CONFIG.mapsEmbedUrl</code>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:1.4rem;">
+          <a class="btn btn--primary" id="openMapsBtn" href="#" target="_blank" rel="noopener">Open in Google Maps<span class="sr-only"> (opens in a new tab)</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       6. TRAVEL & DIRECTIONS
+       ================================================================= -->
+  <section class="section section--white" id="travel" aria-labelledby="travel-title">
+    <div class="wrap reveal-el">
+      <div class="center">
+        <p class="eyebrow">Finding your way</p>
+        <h2 class="section-title" id="travel-title">Travel &amp; Directions</h2>
+        <div class="rule" aria-hidden="true"><span class="diamond"></span></div>
+        <p class="lede">Tell us where you're starting from, or use your current location, and we'll help you reach the venue.</p>
+      </div>
+
+      <div class="card card--arch" style="margin-top:1.8rem;">
+        <div class="field">
+          <label for="startCity">Starting city or area</label>
+          <input class="input" type="text" id="startCity" placeholder="e.g. Kozhikode, Malappuram, Kochi" autocomplete="off" />
+        </div>
+
+        <div class="btn-row" style="justify-content:flex-start;">
+          <button class="btn btn--sage" type="button" id="useLocationBtn">Use my location</button>
+          <button class="btn btn--primary" type="button" id="getDirectionsBtn">Get directions</button>
+        </div>
+
+        <div class="travel-out" id="travelOut" hidden role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>Nearest railway station</h3>
+          <p>Parappanangadi Railway Station and Tirur Railway Station are the closest, roughly 15&ndash;25 km from Cherumukku. Kozhikode (Calicut) Railway Station is a larger hub about 30&ndash;40 km away.</p>
+        </div>
+        <div class="info-card">
+          <h3>Nearest airport</h3>
+          <p>Calicut International Airport (CCJ), Karipur, is the nearest airport &mdash; approximately 25&ndash;35 km from the venue, about a 45&ndash;60 minute drive depending on traffic.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       7. RSVP
+       ================================================================= -->
+  <section class="section section--alt" id="rsvp" aria-labelledby="rsvp-title">
+    <div class="wrap reveal-el">
+      <div class="center">
+        <span class="flourish" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 32 32"><g fill="none" stroke="var(--secondary)" stroke-width="1.3"><rect x="7" y="7" width="18" height="18"></rect><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"></rect></g></svg>
+        </span>
+        <p class="eyebrow">Kindly let us know</p>
+        <h2 class="section-title" id="rsvp-title">RSVP</h2>
+        <div class="rule" aria-hidden="true"><span class="diamond"></span></div>
+        <p class="lede">On submit, we'll open a ready-to-send WhatsApp message (or email) so you can confirm in one tap.</p>
+      </div>
+
+      <form class="card card--arch card--ticks" id="rsvpForm" style="margin-top:1.8rem;" novalidate>
+        <div class="form-grid">
+          <div class="col-2">
+            <div class="field">
+              <label for="rsvpName">Full name</label>
+              <input class="input" type="text" id="rsvpName" name="name" required autocomplete="name" />
+            </div>
+            <div class="field">
+              <label for="rsvpPhone">Phone / WhatsApp</label>
+              <input class="input" type="tel" id="rsvpPhone" name="phone" inputmode="tel" autocomplete="tel" />
+            </div>
+          </div>
+
+          <div class="col-2">
+            <div class="field">
+              <label for="rsvpGuests">Number of guests</label>
+              <input class="input" type="number" id="rsvpGuests" name="guests" min="1" max="20" value="1" />
+            </div>
+            <div class="field">
+              <label id="attendingLabel">Will you attend?</label>
+              <div class="radio-row" role="radiogroup" aria-labelledby="attendingLabel">
+                <label><input type="radio" name="attending" value="Yes, joyfully" checked /> Yes, joyfully</label>
+                <label><input type="radio" name="attending" value="Unable to attend" /> Unable to attend</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="rsvpMsg">A note for the couple (optional)</label>
+            <textarea class="textarea" id="rsvpMsg" name="message" placeholder="Your wishes or any details we should know"></textarea>
+          </div>
+        </div>
+
+        <div class="btn-row" style="justify-content:flex-start;">
+          <button class="btn btn--primary" type="submit">Send via WhatsApp<span class="sr-only"> (opens in a new tab)</span></button>
+          <button class="btn btn--ghost" type="button" id="rsvpEmailBtn">Send via Email<span class="sr-only"> (opens your email app)</span></button>
+        </div>
+
+        <div class="form-status" id="rsvpStatus" hidden role="status" aria-live="polite"></div>
+        <p class="form-note">No account or backend needed &mdash; your reply is sent straight from your own WhatsApp or email app.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       8. SAVE THE DATE
+       ================================================================= -->
+  <section class="section section--alt" id="save" aria-labelledby="save-title" style="background:var(--surface-alt);">
+    <div class="wrap reveal-el">
+      <div class="card card--arch std-card">
+        <span class="flourish" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 32 32"><g fill="none" stroke="var(--secondary)" stroke-width="1.3"><rect x="7" y="7" width="18" height="18"></rect><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"></rect></g></svg>
+        </span>
+        <p class="eyebrow">Mark your calendar</p>
+        <h2 class="section-title" id="save-title" style="color:var(--secondary);">Save the Date</h2>
+        <div class="std-date">03 &middot; 08 &middot; 2026</div>
+        <p class="lede">Monday &bull; 11:00 AM &ndash; 3:00 PM &bull; Hayath Auditorium, Cherumukku</p>
+        <div class="btn-row" style="margin-top:1.6rem;">
+          <a class="btn btn--primary" id="gcalBtn" href="#" target="_blank" rel="noopener">Add to Google Calendar<span class="sr-only"> (opens in a new tab)</span></a>
+          <button class="btn btn--sage" type="button" id="icsBtn">Add to Apple / iCal</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       9. DUA / WISHES WALL
+       ================================================================= -->
+  <section class="section section--white" id="wishes" aria-labelledby="wishes-title">
+    <div class="wrap reveal-el">
+      <div class="center">
+        <span class="flourish" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 32 32"><g fill="none" stroke="var(--primary)" stroke-width="1.3"><rect x="7" y="7" width="18" height="18"></rect><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"></rect></g></svg>
+        </span>
+        <p class="eyebrow">Leave a blessing</p>
+        <h2 class="section-title" id="wishes-title">Dua &amp; Wishes</h2>
+        <div class="rule" aria-hidden="true"><span class="diamond"></span></div>
+        <p class="lede">Share a prayer or a warm wish for Imran &amp; Dhiya. Your words will appear on the wall below.</p>
+      </div>
+
+      <form class="card card--arch" id="wishForm" style="margin-top:1.8rem;" novalidate>
+        <div class="field">
+          <label for="wishName">Your name</label>
+          <input class="input" type="text" id="wishName" name="wishName" required autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="wishText">Your dua or wish</label>
+          <textarea class="textarea" id="wishText" name="wishText" required placeholder="May Allah bless this union with love, patience and barakah…"></textarea>
+        </div>
+        <div class="btn-row" style="justify-content:flex-start;">
+          <button class="btn btn--sage" type="submit">Add my blessing</button>
+        </div>
+        <div class="form-status" id="wishStatus" hidden role="status" aria-live="polite"></div>
+      </form>
+
+      <p class="wishes-empty" id="wishesEmpty">Be the first to leave a blessing.</p>
+      <ul class="wishes-list" id="wishesList" aria-label="Blessings from guests"></ul>
+    </div>
+  </section>
+
+</main>
+
+<!-- =====================================================================
+     10. FOOTER
+     ===================================================================== -->
+<footer class="footer lattice" aria-label="Closing">
+  <div class="footer__rule" aria-hidden="true"></div>
+  <p class="footer__bless">
+    <span lang="ar" style="font-family:var(--arabic); color:var(--secondary);" aria-label="Barakallahu lakuma">&#xFDFD;</span><br />
+    May your home be filled with love, mercy and barakah.
+  </p>
+  <div class="footer__names">Imran <span class="amp" aria-hidden="true">&amp;</span><span class="sr-only">and</span> Dhiya</div>
+  <p class="footer__closing">With wishes and prayers: Family &amp; Friends</p>
+  <span class="flourish footer__mark" aria-hidden="true">
+    <svg width="28" height="28" viewBox="0 0 32 32"><g fill="none" stroke="var(--gold)" stroke-width="1.1"><rect x="7" y="7" width="18" height="18"></rect><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"></rect></g></svg>
+  </span>
+</footer>
+
+<script>
+/* =====================================================================
+   CONFIG — EDIT EVERYTHING HERE
+   All names, dates, links and placeholders live in this one block.
+   ===================================================================== */
+const CONFIG = {
+  /* --- People --- */
+  groom: "Imran Sajawal",
+  bride: "Dhiya Sherin",
+  groomGrandparents: "Kuttyil Alavi & Abdul Rahman",
+  groomParents: "Mr. Mohamed Iqbal & Mrs. Sajitha",
+  groomAddress: "Kuttyil (H), TC KC Link Road, P.O Tirurangadi",
+  brideParents: "Mr. Abdu Nazar V & Mrs. Souda",
+  brideAddress: "Valappil (H), Mavoor, Kozhikode",
+
+  /* --- Contact numbers (as printed on the invitation) --- */
+  contactNumbers: ["8891078870", "8029715608"],
+
+  /* --- Event --- */
+  eventTitle: "Wedding of Imran Sajawal & Dhiya Sherin",
+  dateLabel: "Monday, 03 August 2026",
+  timeLabel: "11:00 AM – 3:00 PM",
+  venueName: "Hayath Auditorium, Cherumukku",
+  closingLine: "With wishes and prayers: Family & Friends",
+
+  /* --- Fixed UTC instants (TIMEZONE-INDEPENDENT).
+         IST is UTC+5:30. 03 Aug 2026 11:00 IST == 05:30 UTC.
+         03 Aug 2026 15:00 IST == 09:30 UTC. --- */
+  startUTC: Date.UTC(2026, 7, 3, 5, 30, 0),  // month index 7 = August -> 2026-08-03T05:30:00.000Z
+  endUTC:   Date.UTC(2026, 7, 3, 9, 30, 0),  //                        -> 2026-08-03T09:30:00.000Z
+  // Pre-formatted UTC stamps for .ics and Google Calendar:
+  icsStart: "20260803T053000Z",
+  icsEnd:   "20260803T093000Z",
+
+  /* =================================================================
+     TODO PLACEHOLDERS — fill these in before publishing
+     ================================================================= */
+
+  // TODO: Google Maps EMBED link. In Google Maps: Share -> Embed a map -> copy the URL inside src="...".
+  //       Leave "" to keep the placeholder card. Example:
+  //       "https://www.google.com/maps/embed?pb=..."
+  mapsEmbedUrl: "", // TODO
+
+  // TODO: Google Maps SHARE / place link for the "Open in Google Maps" button and directions.
+  //       If left "", we fall back to a text search for the venue name.
+  mapsShareUrl: "", // TODO
+
+  // TODO: Venue latitude/longitude for the haversine distance estimate & precise directions.
+  //       Get it from Google Maps: right-click the venue pin -> the first item is "lat, lng".
+  //       Example: { lat: 11.176, lng: 75.933 }
+  venueLatLng: null, // TODO  e.g. { lat: 11.1760, lng: 75.9330 }
+
+  // TODO: RSVP WhatsApp number in FULL international format, digits only, no "+".
+  //       India example: 91XXXXXXXXXX. Leave "" to hide/disable WhatsApp send.
+  whatsappNumber: "", // TODO  e.g. "918891078870"
+
+  // TODO: RSVP email address that receives the mailto: reply.
+  rsvpEmail: "", // TODO  e.g. "family@example.com"
+
+  // TODO: Optional hero background photo URL (kept subtle at low opacity).
+  //       Leave "" for the clean type-only hero.
+  heroPhotoUrl: "" // TODO  e.g. "https://.../couple.jpg"
+};
+
+/* =====================================================================
+   Small utilities
+   ===================================================================== */
+const $  = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* =====================================================================
+   ENTRANCE LOADER — plays once, on first load only.
+   State held in a JS variable so anchor navigation never replays it.
+   ===================================================================== */
+let entrancePlayed = false;
+(function entrance() {
+  const loader = $('#loader');
+  const hero   = $('#hero');
+
+  function finish() {
+    if (entrancePlayed) return;
+    entrancePlayed = true;
+    loader.classList.add('hide');
+    hero.classList.add('reveal');
+    // Remove from DOM after the dissolve so it can never intercept clicks
+    const remove = () => loader.classList.add('gone');
+    if (prefersReduced) remove();
+    else setTimeout(remove, 700);
+  }
+
+  if (prefersReduced) {
+    // Reduced motion: no draw/rule/breath/blur — reveal instantly.
+    finish();
+  } else {
+    // Let the star draw + horizon rule play, then dissolve (~2.1s total).
+    setTimeout(finish, 2100);
+  }
+})();
+
+/* =====================================================================
+   NAV — scroll-aware class, mobile hamburger, smooth scroll,
+   active-link highlighting via IntersectionObserver.
+   ===================================================================== */
+(function nav() {
+  const nav      = $('#nav');
+  const toggle   = $('#navToggle');
+  const links    = $('#navLinks');
+
+  // Scroll-aware: add .scrolled past the hero region
+  const onScroll = () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // Hamburger toggle. On mobile the collapsed menu is visibility:hidden,
+  // so its links are removed from the tab order; on open we move focus to
+  // the first link so keyboard users land inside the menu.
+  function setMenu(open) {
+    links.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    if (open) {
+      const first = links.querySelector('a');
+      if (first) first.focus();
+    }
+  }
+  toggle.addEventListener('click', () => setMenu(!links.classList.contains('open')));
+
+  // Close menu when a link is tapped (mobile)
+  links.addEventListener('click', (e) => {
+    if (e.target.closest('a')) setMenu(false);
+  });
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && links.classList.contains('open')) { setMenu(false); toggle.focus(); }
+  });
+
+  // Active-link highlighting
+  const navLinkFor = {};
+  $$('#navLinks a').forEach(a => { navLinkFor[a.getAttribute('href').slice(1)] = a; });
+  const sections = Object.keys(navLinkFor).map(id => document.getElementById(id)).filter(Boolean);
+  if ('IntersectionObserver' in window) {
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          $$('#navLinks a').forEach(a => a.classList.remove('active'));
+          const link = navLinkFor[en.target.id];
+          if (link) link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+    sections.forEach(s => spy.observe(s));
+  }
+
+  // Smooth scroll for the hero scroll cue button
+  $$('[data-scroll]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = document.querySelector(btn.dataset.scroll);
+      if (t) t.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth' });
+    });
+  });
+})();
+
+/* =====================================================================
+   SCROLL REVEAL — IntersectionObserver adds .in once per element.
+   ===================================================================== */
+(function reveal() {
+  const els = $$('.reveal-el');
+  if (prefersReduced || !('IntersectionObserver' in window)) {
+    els.forEach(el => el.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries, obs) => {
+    entries.forEach(en => {
+      if (en.isIntersecting) { en.target.classList.add('in'); obs.unobserve(en.target); }
+    });
+  }, { threshold: 0.15 });
+  els.forEach(el => io.observe(el));
+})();
+
+/* =====================================================================
+   COUNTDOWN — target is the fixed UTC instant (timezone-independent).
+   Handles the "already passed" state gracefully.
+   ===================================================================== */
+(function countdown() {
+  const elD = $('#cd-days'), elH = $('#cd-hours'), elM = $('#cd-mins'), elS = $('#cd-secs');
+  const clock = $('#countdown-clock');
+  const target = CONFIG.startUTC;
+  const pad = n => String(n).padStart(2, '0');
+
+  function tick() {
+    const diff = target - Date.now();
+    if (diff <= 0) {
+      // Event day / passed — celebratory message
+      clock.innerHTML = '<p class="cd-done">The blessed day is here — Alhamdulillah!</p>';
+      return; // stop scheduling
+    }
+    const s = Math.floor(diff / 1000);
+    elD.textContent = String(Math.floor(s / 86400));
+    elH.textContent = pad(Math.floor((s % 86400) / 3600));
+    elM.textContent = pad(Math.floor((s % 3600) / 60));
+    elS.textContent = pad(s % 60);
+    setTimeout(tick, 1000);
+  }
+  tick();
+})();
+
+/* =====================================================================
+   CONTACT NUMBERS — surfaced in the Event Details card from CONFIG
+   (single source of truth). Rendered as tel: links.
+   ===================================================================== */
+(function contact() {
+  const el = $('#contactNumbers');
+  if (!el) return;
+  const nums = Array.isArray(CONFIG.contactNumbers) ? CONFIG.contactNumbers : [];
+  if (!nums.length) { el.textContent = '—'; return; }
+  el.textContent = '';
+  nums.forEach((n, i) => {
+    if (i) el.appendChild(document.createTextNode(' · '));
+    const a = document.createElement('a');
+    a.href = 'tel:' + String(n).replace(/\s+/g, '');
+    a.textContent = n;
+    el.appendChild(a);
+  });
+})();
+
+/* =====================================================================
+   MAP + "Open in Google Maps"
+   ===================================================================== */
+(function maps() {
+  // Inject embed iframe if provided
+  if (CONFIG.mapsEmbedUrl) {
+    const holder = $('#mapEmbed');
+    const iframe = document.createElement('iframe');
+    iframe.src = CONFIG.mapsEmbedUrl;
+    iframe.title = 'Map to ' + CONFIG.venueName;
+    iframe.loading = 'lazy';
+    iframe.referrerPolicy = 'no-referrer-when-downgrade';
+    iframe.setAttribute('allowfullscreen', '');
+    holder.replaceWith(iframe);
+  }
+
+  // "Open in Google Maps" link
+  const btn = $('#openMapsBtn');
+  if (CONFIG.mapsShareUrl) {
+    btn.href = CONFIG.mapsShareUrl;
+  } else if (CONFIG.venueLatLng) {
+    btn.href = 'https://www.google.com/maps/search/?api=1&query=' +
+      CONFIG.venueLatLng.lat + ',' + CONFIG.venueLatLng.lng;
+  } else {
+    btn.href = 'https://www.google.com/maps/search/?api=1&query=' +
+      encodeURIComponent(CONFIG.venueName);
+  }
+})();
+
+/* =====================================================================
+   TRAVEL & DIRECTIONS
+   - "Use my location": Geolocation API + haversine to venue lat/lng.
+   - Typed city: general guidance + Google Maps directions link.
+   - "Get directions": opens Google Maps directions to the venue.
+   ===================================================================== */
+(function travel() {
+  const out       = $('#travelOut');
+  const cityInput = $('#startCity');
+  const locBtn    = $('#useLocationBtn');
+  const dirBtn    = $('#getDirectionsBtn');
+
+  // Destination string used in Google Maps directions URLs
+  function destination() {
+    if (CONFIG.venueLatLng) return CONFIG.venueLatLng.lat + ',' + CONFIG.venueLatLng.lng;
+    return CONFIG.venueName;
+  }
+  function directionsUrl(origin) {
+    const u = new URL('https://www.google.com/maps/dir/');
+    u.searchParams.set('api', '1');
+    if (origin) u.searchParams.set('origin', origin);
+    u.searchParams.set('destination', destination());
+    u.searchParams.set('travelmode', 'driving');
+    return u.toString();
+  }
+
+  function show(html) { out.hidden = false; out.innerHTML = html; }
+
+  // Haversine great-circle distance (km)
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371, toRad = d => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  // Get directions (typed city or generic)
+  dirBtn.addEventListener('click', () => {
+    const origin = cityInput.value.trim();
+    const url = directionsUrl(origin || '');
+    show(
+      (origin
+        ? 'Opening driving directions from <strong>' + escapeHtml(origin) + '</strong> to ' + escapeHtml(CONFIG.venueName) + '.'
+        : 'Opening Google Maps directions to <strong>' + escapeHtml(CONFIG.venueName) + '</strong>. Add your starting city above for a from-here route.') +
+      '<div class="btn-row" style="justify-content:flex-start;margin-top:.9rem;">' +
+        '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + url + '">Open directions<span class="sr-only"> (opens in a new tab)</span></a>' +
+      '</div>'
+    );
+    window.open(url, '_blank', 'noopener');
+  });
+
+  // Use my location -> distance estimate
+  locBtn.addEventListener('click', () => {
+    if (!('geolocation' in navigator)) {
+      show('Your browser does not support location. Please type your city above and tap “Get directions”.');
+      return;
+    }
+    show('Locating you…');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        let distLine = '';
+        if (CONFIG.venueLatLng) {
+          const km = haversine(latitude, longitude, CONFIG.venueLatLng.lat, CONFIG.venueLatLng.lng);
+          distLine = 'You are approximately <strong>' + Math.round(km) +
+            ' km</strong> (straight-line) from ' + escapeHtml(CONFIG.venueName) + '. Actual road distance will be a little longer.';
+        } else {
+          distLine = 'We found your location. (Add <code>CONFIG.venueLatLng</code> for a distance estimate.) Here are live directions to ' + escapeHtml(CONFIG.venueName) + '.';
+        }
+        const url = directionsUrl(latitude + ',' + longitude);
+        show(
+          distLine +
+          '<div class="btn-row" style="justify-content:flex-start;margin-top:.9rem;">' +
+            '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + url + '">Open live directions<span class="sr-only"> (opens in a new tab)</span></a>' +
+          '</div>'
+        );
+      },
+      () => {
+        show('We couldn’t access your location. Please type your city above and tap “Get directions”.');
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    );
+  });
+})();
+
+/* =====================================================================
+   RSVP — builds a WhatsApp wa.me link AND a mailto: link.
+   Client-side only. No backend.
+   ===================================================================== */
+(function rsvp() {
+  const form   = $('#rsvpForm');
+  const status = $('#rsvpStatus');
+  const emailBtn = $('#rsvpEmailBtn');
+
+  function gather() {
+    const name = $('#rsvpName').value.trim();
+    const phone = $('#rsvpPhone').value.trim();
+    const guests = $('#rsvpGuests').value.trim() || '1';
+    const attending = (form.querySelector('input[name="attending"]:checked') || {}).value || '';
+    const message = $('#rsvpMsg').value.trim();
+    return { name, phone, guests, attending, message };
+  }
+
+  function buildText(d) {
+    let t = 'RSVP — ' + CONFIG.eventTitle + '\n';
+    t += 'Name: ' + d.name + '\n';
+    if (d.phone) t += 'Phone/WhatsApp: ' + d.phone + '\n';
+    t += 'Attending: ' + d.attending + '\n';
+    t += 'Guests: ' + d.guests + '\n';
+    if (d.message) t += 'Message: ' + d.message + '\n';
+    return t;
+  }
+
+  const nameField = $('#rsvpName');
+
+  // Tie the error to the offending control (WCAG 3.3.1). status has id="rsvpStatus".
+  function markInvalid(field) {
+    field.setAttribute('aria-invalid', 'true');
+    field.setAttribute('aria-describedby', 'rsvpStatus');
+  }
+  function clearInvalid() {
+    nameField.removeAttribute('aria-invalid');
+    nameField.removeAttribute('aria-describedby');
+  }
+  // Clear the invalid state as soon as the user starts fixing the field.
+  nameField.addEventListener('input', clearInvalid);
+
+  function validate(d) {
+    if (!d.name) {
+      status.hidden = false;
+      status.innerHTML = 'Please enter your name so we know who is replying.';
+      markInvalid(nameField);
+      nameField.focus();
+      return false;
+    }
+    clearInvalid();
+    return true;
+  }
+
+  // WhatsApp submit
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const d = gather();
+    if (!validate(d)) return;
+    const text = buildText(d);
+
+    if (CONFIG.whatsappNumber) {
+      const url = 'https://wa.me/' + CONFIG.whatsappNumber + '?text=' + encodeURIComponent(text);
+      window.open(url, '_blank', 'noopener');
+      status.hidden = false;
+      status.innerHTML = 'Thank you, <strong>' + escapeHtml(d.name) + '</strong>! We\'ve opened WhatsApp with your reply — just press send. If nothing opened, use “Send via Email”.';
+    } else {
+      // No WhatsApp number configured -> fall back to email
+      openEmail(d);
+      status.hidden = false;
+      status.innerHTML = 'Thank you, <strong>' + escapeHtml(d.name) + '</strong>! (WhatsApp number not set — we opened your email app instead.)';
+    }
+  });
+
+  function openEmail(d) {
+    const to = CONFIG.rsvpEmail || '';
+    const subject = 'RSVP — ' + CONFIG.groom + ' & ' + CONFIG.bride;
+    const body = buildText(d);
+    const url = 'mailto:' + encodeURIComponent(to) +
+      '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(body);
+    window.location.href = url;
+  }
+
+  // Email submit
+  emailBtn.addEventListener('click', () => {
+    const d = gather();
+    if (!validate(d)) return;
+    openEmail(d);
+    status.hidden = false;
+    status.innerHTML = 'Thank you, <strong>' + escapeHtml(d.name) + '</strong>! We\'ve opened your email app with the RSVP — just press send.';
+  });
+})();
+
+/* =====================================================================
+   SAVE THE DATE — Google Calendar link + downloadable .ics with VALARM.
+   Dates use the fixed UTC 'Z' stamps from CONFIG.
+   ===================================================================== */
+(function saveTheDate() {
+  const details = 'Wedding celebration of ' + CONFIG.groom + ' & ' + CONFIG.bride +
+    '. ' + CONFIG.timeLabel + ' IST. ' + CONFIG.closingLine;
+
+  // --- Google Calendar link ---
+  const gcal = new URL('https://calendar.google.com/calendar/render');
+  gcal.searchParams.set('action', 'TEMPLATE');
+  gcal.searchParams.set('text', CONFIG.eventTitle);
+  gcal.searchParams.set('dates', CONFIG.icsStart + '/' + CONFIG.icsEnd);
+  gcal.searchParams.set('details', details);
+  gcal.searchParams.set('location', CONFIG.venueName);
+  $('#gcalBtn').href = gcal.toString();
+
+  // --- .ics generation ---
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function dtStamp() {
+    const d = new Date();
+    return d.getUTCFullYear() + pad(d.getUTCMonth()+1) + pad(d.getUTCDate()) + 'T' +
+           pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + 'Z';
+  }
+  function icsEscape(s){ return String(s).replace(/([,;\\])/g,'\\$1').replace(/\n/g,'\\n'); }
+
+  function buildICS() {
+    const uid = 'imran-dhiya-' + CONFIG.icsStart + '@wedding.invite';
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Imran & Dhiya//Wedding Invitation//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      'UID:' + uid,
+      'DTSTAMP:' + dtStamp(),
+      'DTSTART:' + CONFIG.icsStart,   // 20260803T053000Z
+      'DTEND:' + CONFIG.icsEnd,       // 20260803T093000Z
+      'SUMMARY:' + icsEscape(CONFIG.eventTitle),
+      'DESCRIPTION:' + icsEscape(details),
+      'LOCATION:' + icsEscape(CONFIG.venueName),
+      'STATUS:CONFIRMED',
+      'TRANSP:OPAQUE',
+      // Reminder 1 day before
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:' + icsEscape('Tomorrow: ' + CONFIG.eventTitle),
+      'TRIGGER:-P1D',
+      'END:VALARM',
+      // Reminder 2 hours before
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:' + icsEscape('Soon: ' + CONFIG.eventTitle),
+      'TRIGGER:-PT2H',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ];
+    // RFC 5545 line endings
+    return lines.join('\r\n');
+  }
+
+  $('#icsBtn').addEventListener('click', () => {
+    const blob = new Blob([buildICS()], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Imran-and-Dhiya-Wedding.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+})();
+
+/* =====================================================================
+   DUA / WISHES WALL — in-memory array only (NO storage).
+   ===================================================================== */
+(function wishes() {
+  const form   = $('#wishForm');
+  const listEl = $('#wishesList');
+  const empty  = $('#wishesEmpty');
+  const status = $('#wishStatus');
+  const nameEl = $('#wishName');
+  const textEl = $('#wishText');
+
+  // In-memory store (cleared on reload — no persistence by design)
+  const wishStore = [];
+
+  function render() {
+    listEl.innerHTML = '';
+    if (wishStore.length === 0) { empty.hidden = false; return; }
+    empty.hidden = true;
+    // newest first
+    wishStore.slice().reverse().forEach(w => {
+      const li = document.createElement('li');
+      li.className = 'wish';
+      const p = document.createElement('p');
+      p.className = 'wish__text';
+      p.textContent = '“' + w.text + '”';
+      const by = document.createElement('div');
+      by.className = 'wish__by';
+      by.textContent = '— ' + w.name;
+      li.appendChild(p); li.appendChild(by);
+      listEl.appendChild(li);
+    });
+  }
+
+  // Tie validation errors to their control (WCAG 3.3.1). status has id="wishStatus".
+  function markInvalid(field) {
+    field.setAttribute('aria-invalid', 'true');
+    field.setAttribute('aria-describedby', 'wishStatus');
+  }
+  function clearInvalid() {
+    [nameEl, textEl].forEach(f => {
+      f.removeAttribute('aria-invalid');
+      f.removeAttribute('aria-describedby');
+    });
+  }
+  // Clear the invalid state as soon as the user edits either field.
+  nameEl.addEventListener('input', clearInvalid);
+  textEl.addEventListener('input', clearInvalid);
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = nameEl.value.trim();
+    const text = textEl.value.trim();
+    if (!name || !text) {
+      status.hidden = false;
+      status.innerHTML = 'Please add both your name and a wish.';
+      clearInvalid();
+      const bad = !name ? nameEl : textEl;
+      markInvalid(bad);
+      bad.focus();
+      return;
+    }
+    clearInvalid();
+    wishStore.push({ name, text });   // stored as plain values; rendered via textContent (XSS-safe)
+    render();
+    form.reset();
+    status.hidden = false;
+    status.innerHTML = 'JazakAllah khair, <strong>' + escapeHtml(name) + '</strong>! Your blessing has been added below.';
+    nameEl.focus();
+  });
+})();
+
+/* =====================================================================
+   HERO PHOTO (optional) — only applied if CONFIG.heroPhotoUrl set.
+   ===================================================================== */
+(function heroPhoto() {
+  if (!CONFIG.heroPhotoUrl) return;
+  const el = $('#heroPhoto');
+  el.style.backgroundImage = 'url("' + CONFIG.heroPhotoUrl + '")';
+  el.classList.add('on');
+})();
+
+/* =====================================================================
+   Shared helper: HTML-escape for safe innerHTML interpolation.
+   (Wishes use textContent; this guards status messages etc.)
+   ===================================================================== */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+</script>
+</body>
+</html>
