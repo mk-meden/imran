@@ -29,7 +29,7 @@ if (!ADMIN_TOKEN) {
 
 const app = express();
 app.disable('x-powered-by');
-app.set('trust proxy', 1);                 // behind Caddy: read real IP from X-Forwarded-For
+app.set('trust proxy', 1);                 // behind Cloudflare Tunnel: trust the single proxy hop
 app.use(express.json({ limit: '16kb' }));  // small payloads only
 
 /* ------------------------------------------------------------------ CORS */
@@ -45,10 +45,13 @@ app.use(cors({
 }));
 
 /* ------------------------------------------------ tiny in-memory rate limit */
+// Real client IP: Cloudflare sets CF-Connecting-IP; fall back to socket/XFF.
+function clientIp(req) { return req.get('cf-connecting-ip') || req.ip || 'unknown'; }
+
 const hits = new Map(); // ip -> [timestamps]
 function rateLimit({ windowMs, max }) {
   return (req, res, next) => {
-    const ip = req.ip || 'unknown';
+    const ip = clientIp(req);
     const now = Date.now();
     const arr = (hits.get(ip) || []).filter(t => now - t < windowMs);
     if (arr.length >= max) {
@@ -124,7 +127,7 @@ app.post('/api/rsvp', rateLimit({ windowMs: 3600_000, max: 30 }), (req, res) => 
       attending,
       message: clip(b.message, 2000),
       created_at: new Date().toISOString(),
-      ip: (req.ip || '').slice(0, 45)
+      ip: clientIp(req).slice(0, 45)
     });
     res.status(201).json({ ok: true, id: info.lastInsertRowid });
   } catch (err) {

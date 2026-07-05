@@ -1,9 +1,13 @@
 # One command: `docker compose up -d --build`
-# - app:   the RSVP API + dashboard (Node + SQLite)
-# - caddy: reverse proxy that fetches a free HTTPS cert for your domain automatically
 #
-# Fill in .env first (copy from .env.example). Point an A/AAAA DNS record for
-# ${API_DOMAIN} at this VPS before starting, so Caddy can issue the certificate.
+#   app         the RSVP API + dashboard (Node + SQLite), bound to the internal
+#               Docker network ONLY — it publishes NO host ports.
+#   cloudflared Cloudflare Tunnel. Makes an OUTBOUND-only connection to Cloudflare
+#               and forwards api.yourdomain.com -> app:3000. No inbound ports are
+#               opened on the VPS, so nothing collides with Wazuh (443/1514/9200)
+#               and the attack surface is not widened.
+#
+# Fill in .env first (copy from .env.example): TUNNEL_TOKEN, ADMIN_TOKEN, ALLOWED_ORIGIN.
 
 services:
   app:
@@ -16,26 +20,26 @@ services:
       ADMIN_TOKEN: ${ADMIN_TOKEN}
       ALLOWED_ORIGIN: ${ALLOWED_ORIGIN}
     volumes:
-      - rsvp_data:/app/data        # SQLite DB persists across rebuilds
+      - rsvp_data:/app/data          # SQLite DB persists across rebuilds
     expose:
-      - "3000"
+      - "3000"                       # internal only — NOT published to the host
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
-  caddy:
-    image: caddy:2
+  cloudflared:
+    image: cloudflare/cloudflared:latest
     restart: unless-stopped
     depends_on:
       - app
-    ports:
-      - "80:80"
-      - "443:443"
+    command: tunnel --no-autoupdate run
     environment:
-      API_DOMAIN: ${API_DOMAIN}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data           # stores the issued TLS certs
-      - caddy_config:/config
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}   # from the Cloudflare Zero Trust dashboard
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
 volumes:
   rsvp_data:
-  caddy_data:
-  caddy_config:
