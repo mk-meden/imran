@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- This invitation is designed light; opt out of browser "force dark" inversion. -->
+<meta name="color-scheme" content="light" />
 <meta name="description" content="Wedding invitation of Imran Sajawal & Dhiya Sherin — Monday, 03 August 2026, Hayath Auditorium, Cherumukku." />
 <meta name="theme-color" content="#F6F3EC" />
 <title>Imran &amp; Dhiya — Wedding Invitation</title>
@@ -82,6 +84,7 @@
     /* Offset in-page anchor jumps so headings clear the fixed nav. */
     scroll-padding-top: var(--nav-h);
     max-width: 100%;
+    color-scheme: light;   /* render in the designed light palette, not auto-dark */
   }
   body {
     margin: 0;
@@ -342,6 +345,9 @@
      ===================================================================== */
   .hero {
     min-height: 100svh; display: grid; place-items: center;
+    /* Column may shrink below its content and is never wider than the screen,
+       so the names / Bismillah wrap or scale instead of overflowing + clipping. */
+    grid-template-columns: minmax(0, 1fr);
     text-align: center;
     /* Viewport-aware vertical padding so short landscape phones don't clip. */
     padding: clamp(4.5rem, 10vh, 6rem) var(--gutter) clamp(2rem, 6vh, 4rem);
@@ -353,18 +359,21 @@
     opacity: 0; z-index: 0;
   }
   .hero__photo.on { opacity: .16; }
-  .hero__inner { position: relative; z-index: 1; max-width: 760px; }
+  /* width:100% + min-width:0 make the block fill the (capped) column instead of
+     sizing to its widest child, so nothing pushes past the viewport edge. */
+  .hero__inner { position: relative; z-index: 1; width: 100%; max-width: 760px; min-width: 0; }
   .bismillah {
-    font-family: var(--arabic); font-size: clamp(2.4rem, 7vw, 4rem);
+    font-family: var(--arabic); font-size: clamp(1.8rem, 8vw, 4rem);
     color: var(--secondary); line-height: 1; margin-bottom: 1.4rem; direction: rtl;
+    max-width: 100%;
   }
   .hero__eyebrow { color: var(--muted); letter-spacing: .35em; text-transform: uppercase; font-size: .74rem; margin-bottom: 1.5rem; }
   .hero__names {
     font-family: var(--serif); font-weight: 500;
-    /* Slightly lower floor gives 320px breathing room if a wide fallback
-       font loads before Cormorant; global overflow-wrap guards the rest. */
-    font-size: clamp(2.6rem, 8vw + 1rem, 6rem); color: var(--ink);
-    line-height: 1.02; margin: 0;
+    /* Scales with viewport width and wraps if still too long, so "Imran & Dhiya"
+       never overflows a narrow phone. */
+    font-size: clamp(2rem, 10vw, 6rem); color: var(--ink);
+    line-height: 1.05; margin: 0; overflow-wrap: break-word;
   }
   .hero__names .amp { font-style: italic; font-weight: 400; color: var(--primary); display: inline-block; padding: 0 .15em; }
   .hero__sprig { display: block; margin: 1rem auto; width: clamp(110px, 22vw, 150px); height: auto; }
