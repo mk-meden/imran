@@ -864,7 +864,7 @@
         <p class="eyebrow">Kindly let us know</p>
         <h2 class="section-title" id="rsvp-title">RSVP</h2>
         <div class="rule" aria-hidden="true"><span class="diamond"></span></div>
-        <p class="lede">On submit, we'll open a ready-to-send WhatsApp message (or email) so you can confirm in one tap.</p>
+        <p class="lede">Please let us know if you can join us. Fill in the form and hit submit &mdash; that&rsquo;s all it takes.</p>
       </div>
 
       <form class="card card--arch card--ticks" id="rsvpForm" style="margin-top:1.8rem;" novalidate>
@@ -901,12 +901,11 @@
         </div>
 
         <div class="btn-row" style="justify-content:flex-start;">
-          <button class="btn btn--primary" type="submit">Send via WhatsApp<span class="sr-only"> (opens in a new tab)</span></button>
-          <button class="btn btn--ghost" type="button" id="rsvpEmailBtn">Send via Email<span class="sr-only"> (opens your email app)</span></button>
+          <button class="btn btn--primary" type="submit" id="rsvpSubmit">Submit RSVP</button>
         </div>
 
         <div class="form-status" id="rsvpStatus" hidden role="status" aria-live="polite"></div>
-        <p class="form-note">No account or backend needed &mdash; your reply is sent straight from your own WhatsApp or email app.</p>
+        <p class="form-note">Your RSVP is sent securely to the couple &mdash; you&rsquo;ll see a confirmation here. No account needed.</p>
       </form>
     </div>
   </section>
@@ -1037,12 +1036,12 @@ const CONFIG = {
   //       Example: { lat: 11.176, lng: 75.933 }
   venueLatLng: null, // TODO  e.g. { lat: 11.1760, lng: 75.9330 }
 
-  // TODO: RSVP WhatsApp number in FULL international format, digits only, no "+".
-  //       India example: 91XXXXXXXXXX. Leave "" to hide/disable WhatsApp send.
-  whatsappNumber: "", // TODO  e.g. "918891078870"
-
-  // TODO: RSVP email address that receives the mailto: reply.
-  rsvpEmail: "", // TODO  e.g. "family@example.com"
+  // TODO: RSVP backend API base URL — your VPS, over HTTPS (required: an HTTPS
+  //       page cannot call an http:// or bare-IP endpoint). No trailing slash.
+  //       The form POSTs each RSVP to `${apiBaseUrl}/api/rsvp`. See server/README.md.
+  //       Leave "" and the form shows a friendly "not live yet" message instead
+  //       of failing. Example: "https://api.yourdomain.com"
+  apiBaseUrl: "", // TODO  e.g. "https://api.yourdomain.com"
 
   // TODO: Optional hero background photo URL (kept subtle at low opacity).
   //       Leave "" for the clean type-only hero.
@@ -1329,36 +1328,26 @@ let entrancePlayed = false;
 })();
 
 /* =====================================================================
-   RSVP — builds a WhatsApp wa.me link AND a mailto: link.
-   Client-side only. No backend.
+   RSVP — submits the form to the backend API (your VPS) which stores it
+   in SQLite. Set CONFIG.apiBaseUrl. No third-party accounts, no storage.
    ===================================================================== */
 (function rsvp() {
-  const form   = $('#rsvpForm');
-  const status = $('#rsvpStatus');
-  const emailBtn = $('#rsvpEmailBtn');
-
-  function gather() {
-    const name = $('#rsvpName').value.trim();
-    const phone = $('#rsvpPhone').value.trim();
-    const guests = $('#rsvpGuests').value.trim() || '1';
-    const attending = (form.querySelector('input[name="attending"]:checked') || {}).value || '';
-    const message = $('#rsvpMsg').value.trim();
-    return { name, phone, guests, attending, message };
-  }
-
-  function buildText(d) {
-    let t = 'RSVP — ' + CONFIG.eventTitle + '\n';
-    t += 'Name: ' + d.name + '\n';
-    if (d.phone) t += 'Phone/WhatsApp: ' + d.phone + '\n';
-    t += 'Attending: ' + d.attending + '\n';
-    t += 'Guests: ' + d.guests + '\n';
-    if (d.message) t += 'Message: ' + d.message + '\n';
-    return t;
-  }
-
+  const form      = $('#rsvpForm');
+  const status    = $('#rsvpStatus');
+  const submitBtn = $('#rsvpSubmit');
   const nameField = $('#rsvpName');
 
-  // Tie the error to the offending control (WCAG 3.3.1). status has id="rsvpStatus".
+  function gather() {
+    return {
+      name:      $('#rsvpName').value.trim(),
+      phone:     $('#rsvpPhone').value.trim(),
+      guests:    parseInt($('#rsvpGuests').value, 10) || 1,
+      attending: (form.querySelector('input[name="attending"]:checked') || {}).value || '',
+      message:   $('#rsvpMsg').value.trim()
+    };
+  }
+
+  // Tie validation errors to the offending control (WCAG 3.3.1).
   function markInvalid(field) {
     field.setAttribute('aria-invalid', 'true');
     field.setAttribute('aria-describedby', 'rsvpStatus');
@@ -1367,13 +1356,18 @@ let entrancePlayed = false;
     nameField.removeAttribute('aria-invalid');
     nameField.removeAttribute('aria-describedby');
   }
-  // Clear the invalid state as soon as the user starts fixing the field.
   nameField.addEventListener('input', clearInvalid);
+
+  // Show a status message; tint the border green (ok) or blush (error).
+  function show(html, isError) {
+    status.hidden = false;
+    status.innerHTML = html;
+    status.style.borderColor = isError ? 'var(--blush-dark)' : 'var(--primary)';
+  }
 
   function validate(d) {
     if (!d.name) {
-      status.hidden = false;
-      status.innerHTML = 'Please enter your name so we know who is replying.';
+      show('Please enter your name so we know who is replying.', true);
       markInvalid(nameField);
       nameField.focus();
       return false;
@@ -1382,43 +1376,51 @@ let entrancePlayed = false;
     return true;
   }
 
-  // WhatsApp submit
-  form.addEventListener('submit', (e) => {
+  const firstContact = () =>
+    (CONFIG.contactNumbers && CONFIG.contactNumbers[0]) ? CONFIG.contactNumbers[0] : 'the contact numbers above';
+
+  let sending = false;
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (sending) return;
     const d = gather();
     if (!validate(d)) return;
-    const text = buildText(d);
 
-    if (CONFIG.whatsappNumber) {
-      const url = 'https://wa.me/' + CONFIG.whatsappNumber + '?text=' + encodeURIComponent(text);
-      window.open(url, '_blank', 'noopener');
-      status.hidden = false;
-      status.innerHTML = 'Thank you, <strong>' + escapeHtml(d.name) + '</strong>! We\'ve opened WhatsApp with your reply — just press send. If nothing opened, use “Send via Email”.';
-    } else {
-      // No WhatsApp number configured -> fall back to email
-      openEmail(d);
-      status.hidden = false;
-      status.innerHTML = 'Thank you, <strong>' + escapeHtml(d.name) + '</strong>! (WhatsApp number not set — we opened your email app instead.)';
+    // Backend not wired up yet -> graceful message instead of a broken submit.
+    if (!CONFIG.apiBaseUrl) {
+      show('Our RSVP form isn\'t live just yet — please check back soon, or reach us on <strong>' +
+        escapeHtml(firstContact()) + '</strong>.', true);
+      return;
     }
-  });
 
-  function openEmail(d) {
-    const to = CONFIG.rsvpEmail || '';
-    const subject = 'RSVP — ' + CONFIG.groom + ' & ' + CONFIG.bride;
-    const body = buildText(d);
-    const url = 'mailto:' + encodeURIComponent(to) +
-      '?subject=' + encodeURIComponent(subject) +
-      '&body=' + encodeURIComponent(body);
-    window.location.href = url;
-  }
+    sending = true;
+    const label = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    show('Sending your RSVP…', false);
 
-  // Email submit
-  emailBtn.addEventListener('click', () => {
-    const d = gather();
-    if (!validate(d)) return;
-    openEmail(d);
-    status.hidden = false;
-    status.innerHTML = 'Thank you, <strong>' + escapeHtml(d.name) + '</strong>! We\'ve opened your email app with the RSVP — just press send.';
+    try {
+      const res = await fetch(CONFIG.apiBaseUrl.replace(/\/+$/, '') + '/api/rsvp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(d)
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      await res.json().catch(() => ({}));
+      form.reset();
+      const warm = /unable/i.test(d.attending)
+        ? 'Thank you for letting us know, <strong>' + escapeHtml(d.name) + '</strong>. You\'ll be missed — we\'re grateful for your prayers.'
+        : 'Thank you, <strong>' + escapeHtml(d.name) + '</strong>! Your RSVP is received. We can\'t wait to celebrate with you, Insha Allah.';
+      show(warm, false);
+    } catch (err) {
+      show('Sorry — we couldn\'t submit your RSVP just now. Please try again in a moment, or reach us on <strong>' +
+        escapeHtml(firstContact()) + '</strong>.', true);
+    } finally {
+      sending = false;
+      submitBtn.disabled = false;
+      submitBtn.textContent = label;
+    }
   });
 })();
 

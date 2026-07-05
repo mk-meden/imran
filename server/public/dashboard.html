@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>RSVP Dashboard · Imran &amp; Dhiya</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23F6F3EC'/%3E%3Cg fill='none' stroke='%231F5F5B' stroke-width='1.6'%3E%3Crect x='7' y='7' width='18' height='18'/%3E%3Crect x='7' y='7' width='18' height='18' transform='rotate(45 16 16)'/%3E%3C/g%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#F6F3EC; --surface:#FFFFFF; --surface-alt:#EEF2EC;
+    --ink:#2E332E; --muted:#54604F; --hairline:#E4DCCF;
+    --teal:#1F5F5B; --teal-deep:#164E4A; --sage:#6E8B74;
+    --amber:#B5732A;            /* "unable to attend" — CVD-safe vs teal */
+    --gold:#A98B4E; --blush:#E8D2CC;
+    --serif:'Cormorant Garamond',Georgia,serif;
+    --sans:'Jost',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --radius:16px; --shadow:0 8px 30px rgba(46,51,46,.07);
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); font-weight:300; line-height:1.6;
+    font-size:clamp(15px,14px + .2vw,16px);
+  }
+  a{color:var(--teal)}
+  h1,h2,h3{margin:0; font-weight:500}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  :focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+  button{font-family:var(--sans);cursor:pointer}
+
+  /* ---------- Login ---------- */
+  .login-wrap{min-height:100svh;display:grid;place-items:center;padding:1.5rem}
+  .login{
+    background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:clamp(1.6rem,5vw,2.6rem);width:100%;max-width:400px;text-align:center
+  }
+  .login .mark{width:44px;height:44px;margin:0 auto .9rem}
+  .login h1{font-family:var(--serif);font-size:1.9rem;color:var(--teal)}
+  .login p{color:var(--muted);margin:.4rem 0 1.4rem;font-size:.95rem}
+  .field{text-align:left;margin-bottom:1rem}
+  .field label{display:block;text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;color:var(--muted);margin-bottom:.45rem}
+  input[type=password],input[type=search]{
+    width:100%;font-family:var(--sans);font-size:1rem;color:var(--ink);background:var(--surface);
+    border:1px solid var(--hairline);border-radius:10px;padding:.7rem .8rem
+  }
+  input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(31,95,91,.15)}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+    border:1px solid var(--teal);background:var(--teal);color:#fff;font-weight:500;
+    letter-spacing:.03em;padding:.72rem 1.3rem;border-radius:999px;font-size:.95rem;width:100%
+  }
+  .btn:hover{background:var(--teal-deep);border-color:var(--teal-deep)}
+  .btn--ghost{background:transparent;color:var(--teal);width:auto;padding:.5rem 1rem}
+  .btn--ghost:hover{background:var(--surface-alt)}
+  .err{color:#9E3B48;font-size:.9rem;margin-top:.6rem;min-height:1.2em}
+
+  /* ---------- Dashboard ---------- */
+  .wrap{max-width:1120px;margin:0 auto;padding:clamp(1.1rem,3vw,2rem)}
+  .top{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;justify-content:space-between;margin-bottom:1.4rem}
+  .top h1{font-family:var(--serif);font-size:clamp(1.7rem,4vw,2.3rem);color:var(--teal)}
+  .top .sub{color:var(--muted);font-size:.9rem;margin-top:.15rem}
+  .top-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+  .live{display:inline-flex;align-items:center;gap:.45rem;font-size:.82rem;color:var(--muted)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--sage);box-shadow:0 0 0 0 rgba(110,139,116,.6);animation:pulse 2.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(110,139,116,.5)}70%{box-shadow:0 0 0 8px rgba(110,139,116,0)}100%{box-shadow:0 0 0 0 rgba(110,139,116,0)}}
+  @media (prefers-reduced-motion:reduce){.dot{animation:none}}
+
+  .kpis{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:1.4rem}
+  .kpi{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius);padding:1.2rem 1.3rem;box-shadow:var(--shadow)}
+  .kpi .k{text-transform:uppercase;letter-spacing:.14em;font-size:.7rem;color:var(--muted)}
+  .kpi .v{font-family:var(--serif);font-weight:600;font-size:clamp(2.4rem,6vw,3.1rem);line-height:1.05;margin-top:.25rem;color:var(--ink);font-variant-numeric:tabular-nums}
+  .kpi .v.teal{color:var(--teal)}
+  .kpi .foot{font-size:.8rem;color:var(--muted);margin-top:.2rem}
+  .kpi .swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:.35rem;vertical-align:baseline}
+
+  .panel{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.2rem 1.3rem;margin-bottom:1.4rem}
+  .panel h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:600;margin-bottom:1rem}
+
+  /* attendance split bar */
+  .splitbar{display:flex;gap:2px;height:26px;border-radius:8px;overflow:hidden;background:var(--surface-alt)}
+  .splitbar span{display:block;height:100%}
+  .seg-yes{background:var(--teal)}
+  .seg-no{background:var(--amber)}
+  .legend{display:flex;flex-wrap:wrap;gap:1.2rem 1.8rem;margin-top:.9rem}
+  .legend .item{display:flex;align-items:center;gap:.5rem;font-size:.92rem;color:var(--ink)}
+  .legend .swatch{width:12px;height:12px;border-radius:3px;flex:none}
+  .legend .n{font-weight:500;font-variant-numeric:tabular-nums}
+  .legend .pct{color:var(--muted)}
+  .empty{color:var(--muted);font-style:italic;padding:.5rem 0}
+
+  /* toolbar + table */
+  .toolbar{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;justify-content:space-between;margin-bottom:1rem}
+  .toolbar .count{font-size:.85rem;color:var(--muted)}
+  .toolbar .grow{flex:1;min-width:180px;max-width:340px}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--hairline);border-radius:12px}
+  table{border-collapse:collapse;width:100%;min-width:720px;font-size:.92rem}
+  thead th{position:sticky;top:0;background:var(--surface-alt);text-align:left;font-weight:500;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.08em;font-size:.68rem;padding:.7rem .8rem;border-bottom:1px solid var(--hairline);white-space:nowrap}
+  tbody td{padding:.7rem .8rem;border-bottom:1px solid var(--hairline);vertical-align:top}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:var(--surface-alt)}
+  td.name{font-weight:500;color:var(--ink)}
+  td.msg{max-width:280px;color:var(--muted)}
+  td.num{text-align:center;font-variant-numeric:tabular-nums}
+  td.when{white-space:nowrap;color:var(--muted);font-size:.85rem}
+  .pill{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap;font-size:.82rem}
+  .pill .swatch{width:9px;height:9px;border-radius:50%;flex:none}
+  .pill.yes .swatch{background:var(--teal)} .pill.yes{color:var(--teal-deep)}
+  .pill.no .swatch{background:var(--amber)} .pill.no{color:#8a5820}
+  .table-empty{padding:2.2rem;text-align:center;color:var(--muted);font-style:italic}
+  .foot-note{color:var(--muted);font-size:.8rem;text-align:center;margin:1.4rem 0 .5rem}
+</style>
+</head>
+<body>
+
+<!-- ======================= LOGIN ======================= -->
+<section class="login-wrap" id="login">
+  <form class="login" id="loginForm" autocomplete="off">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="#1F5F5B" stroke-width="1.5"><rect x="7" y="7" width="18" height="18"/><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"/></g></svg>
+    <h1>RSVP Dashboard</h1>
+    <p>Imran &amp; Dhiya · enter the admin password to view live responses.</p>
+    <div class="field">
+      <label for="pw">Admin password</label>
+      <input type="password" id="pw" autocomplete="current-password" required />
+    </div>
+    <button class="btn" type="submit" id="loginBtn">View dashboard</button>
+    <div class="err" id="loginErr" role="alert" aria-live="polite"></div>
+  </form>
+</section>
+
+<!-- ======================= DASHBOARD ======================= -->
+<main class="wrap" id="dash" hidden>
+  <div class="top">
+    <div>
+      <h1>Wedding RSVPs</h1>
+      <div class="sub">Imran Sajawal &amp; Dhiya Sherin · 03 August 2026</div>
+    </div>
+    <div class="top-actions">
+      <span class="live"><span class="dot" aria-hidden="true"></span><span id="updated">live</span></span>
+      <button class="btn--ghost" id="csvBtn" type="button">Export CSV</button>
+      <button class="btn--ghost" id="logoutBtn" type="button">Log out</button>
+    </div>
+  </div>
+
+  <!-- KPI tiles -->
+  <section class="kpis" aria-label="Summary counts">
+    <div class="kpi"><div class="k">Total responses</div><div class="v" id="kTotal">—</div></div>
+    <div class="kpi"><div class="k">Attending</div><div class="v teal" id="kYes">—</div><div class="foot"><span class="swatch" style="background:var(--teal)"></span>joyfully joining</div></div>
+    <div class="kpi"><div class="k">Unable to attend</div><div class="v" id="kNo">—</div><div class="foot"><span class="swatch" style="background:var(--amber)"></span>sending prayers</div></div>
+    <div class="kpi"><div class="k">Guests coming</div><div class="v" id="kGuests">—</div><div class="foot">headcount for attending</div></div>
+  </section>
+
+  <!-- Attendance split -->
+  <section class="panel" aria-label="Attendance breakdown">
+    <h2>Attendance</h2>
+    <div class="splitbar" id="splitbar" role="img" aria-label="Attendance split"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <!-- Entries -->
+  <section class="panel" aria-label="All responses">
+    <div class="toolbar">
+      <h2 style="margin:0">Responses</h2>
+      <input type="search" id="search" class="grow" placeholder="Search name, phone, or note…" aria-label="Search responses" />
+      <span class="count" id="shownCount"></span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Name</th><th>Phone / WhatsApp</th><th>Guests</th><th>Attending</th><th>Note</th><th>When</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="table-empty" id="tableEmpty" hidden>No responses yet — they’ll appear here the moment guests submit.</div>
+  </section>
+
+  <p class="foot-note">Auto-refreshes every 8 seconds · data stays private on your server</p>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  // ---- state (in memory only; token is never persisted) ----
+  var token = '';
+  var entries = [];
+  var stats = null;
+  var pollTimer = null;
+  var filter = '';
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  // ---- API helper (same-origin) ----
+  function api(path){
+    return fetch(path, { headers: { 'Authorization': 'Bearer ' + token } })
+      .then(function(r){
+        if (r.status === 401){ logout('Session expired — please log in again.'); throw new Error('unauthorized'); }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      });
+  }
+
+  // ---- login ----
+  $('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var pw = $('pw').value;
+    if (!pw) return;
+    token = pw;
+    $('loginErr').textContent = '';
+    $('loginBtn').disabled = true; $('loginBtn').textContent = 'Checking…';
+    fetch('/api/verify', { headers: { 'Authorization': 'Bearer ' + token } })
+      .then(function(r){
+        if (r.ok) { enterDashboard(); }
+        else { token=''; $('loginErr').textContent = 'Incorrect password. Please try again.'; }
+      })
+      .catch(function(){ token=''; $('loginErr').textContent = 'Could not reach the server. Check it is running.'; })
+      .finally(function(){ $('loginBtn').disabled = false; $('loginBtn').textContent = 'View dashboard'; });
+  });
+
+  function enterDashboard(){
+    $('login').hidden = true;
+    $('dash').hidden = false;
+    $('pw').value = '';
+    loadAll();
+    pollTimer = setInterval(function(){ loadAll(true); }, 8000);
+  }
+
+  function logout(msg){
+    token=''; entries=[]; stats=null;
+    if (pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+    $('dash').hidden = true;
+    $('login').hidden = false;
+    $('loginErr').textContent = msg || '';
+  }
+  $('logoutBtn').addEventListener('click', function(){ logout(''); });
+
+  // ---- load + render ----
+  function loadAll(silent){
+    Promise.all([ api('/api/stats'), api('/api/rsvp') ])
+      .then(function(res){
+        stats = res[0];
+        entries = (res[1] && res[1].entries) || [];
+        renderStats();
+        renderTable();
+        $('updated').textContent = 'updated ' + timeShort(new Date());
+      })
+      .catch(function(){ if (!silent) $('updated').textContent = 'connection issue…'; });
+  }
+
+  function num(n){ return (n==null? 0 : n).toLocaleString(); }
+
+  function renderStats(){
+    if (!stats) return;
+    $('kTotal').textContent  = num(stats.total);
+    $('kYes').textContent    = num(stats.attendingYes);
+    $('kNo').textContent     = num(stats.attendingNo);
+    $('kGuests').textContent = num(stats.guestsComing);
+
+    var yes = stats.attendingYes || 0, no = stats.attendingNo || 0, tot = yes + no;
+    var bar = $('splitbar'), legend = $('legend');
+    bar.innerHTML = ''; legend.innerHTML = '';
+    if (tot === 0){
+      bar.style.display = 'none';
+      legend.innerHTML = '<span class="empty">No responses yet.</span>';
+      return;
+    }
+    bar.style.display = 'flex';
+    var yPct = Math.round(yes/tot*100), nPct = 100 - yPct;
+    var s1 = document.createElement('span'); s1.className='seg-yes'; s1.style.width = (yes/tot*100)+'%'; s1.title='Attending: '+yes;
+    var s2 = document.createElement('span'); s2.className='seg-no';  s2.style.width = (no/tot*100)+'%';  s2.title='Unable: '+no;
+    if (yes) bar.appendChild(s1);
+    if (no)  bar.appendChild(s2);
+    bar.setAttribute('aria-label', 'Attending '+yes+' of '+tot+' ('+yPct+'%), unable '+no+' ('+nPct+'%)');
+    legend.appendChild(legendItem('var(--teal)','Attending', yes, yPct));
+    legend.appendChild(legendItem('var(--amber)','Unable to attend', no, nPct));
+  }
+
+  function legendItem(color, label, n, pct){
+    var el = document.createElement('span'); el.className='item';
+    var sw = document.createElement('span'); sw.className='swatch'; sw.style.background=color;
+    var tx = document.createElement('span');
+    tx.appendChild(document.createTextNode(label + ' '));
+    var b = document.createElement('span'); b.className='n'; b.textContent = n;
+    var p = document.createElement('span'); p.className='pct'; p.textContent = ' · ' + pct + '%';
+    tx.appendChild(b); tx.appendChild(p);
+    el.appendChild(sw); el.appendChild(tx);
+    return el;
+  }
+
+  // ---- table (all values via textContent — no HTML injection) ----
+  function renderTable(){
+    var q = filter.trim().toLowerCase();
+    var list = entries.filter(function(e){
+      if (!q) return true;
+      return ((e.name||'') + ' ' + (e.phone||'') + ' ' + (e.message||'')).toLowerCase().indexOf(q) !== -1;
+    });
+    var tbody = $('rows'); tbody.innerHTML = '';
+    $('tableEmpty').hidden = entries.length !== 0;
+    $('shownCount').textContent = list.length + (list.length === 1 ? ' shown' : ' shown');
+
+    list.forEach(function(e){
+      var tr = document.createElement('tr');
+      tr.appendChild(td(String(e.id), 'num'));
+      tr.appendChild(td(e.name || '—', 'name'));
+      tr.appendChild(td(e.phone || '—'));
+      tr.appendChild(td(String(e.guests || 1), 'num'));
+      tr.appendChild(attendingCell(e.attending));
+      tr.appendChild(td(e.message || '', 'msg'));
+      tr.appendChild(td(timeFull(e.created_at), 'when'));
+      tbody.appendChild(tr);
+    });
+  }
+  function td(text, cls){
+    var c = document.createElement('td'); if (cls) c.className = cls; c.textContent = text; return c;
+  }
+  function attendingCell(v){
+    var yes = !/unable/i.test(v || '');
+    var c = document.createElement('td');
+    var pill = document.createElement('span'); pill.className = 'pill ' + (yes ? 'yes' : 'no');
+    var sw = document.createElement('span'); sw.className = 'swatch';
+    pill.appendChild(sw); pill.appendChild(document.createTextNode(yes ? 'Yes, joyfully' : 'Unable'));
+    c.appendChild(pill); return c;
+  }
+
+  // ---- search ----
+  $('search').addEventListener('input', function(e){ filter = e.target.value; renderTable(); });
+
+  // ---- CSV export ----
+  $('csvBtn').addEventListener('click', function(){
+    var head = ['id','name','phone','guests','attending','message','created_at'];
+    var rows = entries.map(function(e){
+      return head.map(function(k){ return csv(e[k]); }).join(',');
+    });
+    var blob = new Blob([head.join(',') + '\n' + rows.join('\n')], { type:'text/csv;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'wedding-rsvps.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
+  });
+  function csv(v){
+    var s = (v==null? '' : String(v));
+    if (/[",\n]/.test(s)) s = '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  }
+
+  // ---- time helpers ----
+  function pad(n){ return (n<10?'0':'')+n; }
+  function timeShort(d){ return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); }
+  function timeFull(iso){
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return iso;
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()+', '+pad(d.getHours())+':'+pad(d.getMinutes());
+  }
+})();
+</script>
+</body>
+</html>

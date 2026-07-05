@@ -1,0 +1,41 @@
+# One command: `docker compose up -d --build`
+# - app:   the RSVP API + dashboard (Node + SQLite)
+# - caddy: reverse proxy that fetches a free HTTPS cert for your domain automatically
+#
+# Fill in .env first (copy from .env.example). Point an A/AAAA DNS record for
+# ${API_DOMAIN} at this VPS before starting, so Caddy can issue the certificate.
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATA_DIR: /app/data
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN}
+    volumes:
+      - rsvp_data:/app/data        # SQLite DB persists across rebuilds
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data           # stores the issued TLS certs
+      - caddy_config:/config
+
+volumes:
+  rsvp_data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,16 @@
+# Caddy auto-provisions and renews a Let's Encrypt HTTPS certificate for this
+# domain (that's why the API must be a real domain, not a bare IP).
+# API_DOMAIN comes from .env (e.g. api.yourdomain.com).
+
+{$API_DOMAIN} {
+	encode gzip
+
+	# Security headers
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	reverse_proxy app:3000
+}
