@@ -629,10 +629,8 @@
       <li><a href="#invitation">Invitation</a></li>
       <li><a href="#couple">Couple</a></li>
       <li><a href="#details">Details</a></li>
-      <li><a href="#travel">Travel</a></li>
       <li><a href="#rsvp">RSVP</a></li>
       <li><a href="#save">Save the Date</a></li>
-      <li><a href="#wishes">Wishes</a></li>
     </ul>
   </nav>
 </header>
@@ -814,45 +812,6 @@
   </section>
 
   <!-- =================================================================
-       6. TRAVEL & DIRECTIONS
-       ================================================================= -->
-  <section class="section section--white" id="travel" aria-labelledby="travel-title">
-    <div class="wrap reveal-el">
-      <div class="center">
-        <p class="eyebrow">Finding your way</p>
-        <h2 class="section-title" id="travel-title">Travel &amp; Directions</h2>
-        <div class="rule" aria-hidden="true"><span class="diamond"></span></div>
-        <p class="lede">Tell us where you're starting from, or use your current location, and we'll help you reach the venue.</p>
-      </div>
-
-      <div class="card card--arch" style="margin-top:1.8rem;">
-        <div class="field">
-          <label for="startCity">Starting city or area</label>
-          <input class="input" type="text" id="startCity" placeholder="e.g. Kozhikode, Malappuram, Kochi" autocomplete="off" />
-        </div>
-
-        <div class="btn-row" style="justify-content:flex-start;">
-          <button class="btn btn--sage" type="button" id="useLocationBtn">Use my location</button>
-          <button class="btn btn--primary" type="button" id="getDirectionsBtn">Get directions</button>
-        </div>
-
-        <div class="travel-out" id="travelOut" hidden role="status" aria-live="polite"></div>
-      </div>
-
-      <div class="info-grid">
-        <div class="info-card">
-          <h3>Nearest railway station</h3>
-          <p>Parappanangadi Railway Station and Tirur Railway Station are the closest, roughly 15&ndash;25 km from Cherumukku. Kozhikode (Calicut) Railway Station is a larger hub about 30&ndash;40 km away.</p>
-        </div>
-        <div class="info-card">
-          <h3>Nearest airport</h3>
-          <p>Calicut International Airport (CCJ), Karipur, is the nearest airport &mdash; approximately 25&ndash;35 km from the venue, about a 45&ndash;60 minute drive depending on traffic.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- =================================================================
        7. RSVP
        ================================================================= -->
   <section class="section section--alt" id="rsvp" aria-labelledby="rsvp-title">
@@ -923,48 +882,10 @@
         <h2 class="section-title" id="save-title" style="color:var(--secondary);">Save the Date</h2>
         <div class="std-date">03 &middot; 08 &middot; 2026</div>
         <p class="lede">Monday &bull; 11:00 AM &ndash; 3:00 PM &bull; Hayath Auditorium, Cherumukku</p>
-        <div class="btn-row" style="margin-top:1.6rem;">
-          <a class="btn btn--primary" id="gcalBtn" href="#" target="_blank" rel="noopener">Add to Google Calendar<span class="sr-only"> (opens in a new tab)</span></a>
-          <button class="btn btn--sage" type="button" id="icsBtn">Add to Apple / iCal</button>
-        </div>
       </div>
     </div>
   </section>
 
-  <!-- =================================================================
-       9. DUA / WISHES WALL
-       ================================================================= -->
-  <section class="section section--white" id="wishes" aria-labelledby="wishes-title">
-    <div class="wrap reveal-el">
-      <div class="center">
-        <span class="flourish" aria-hidden="true">
-          <svg width="26" height="26" viewBox="0 0 32 32"><g fill="none" stroke="var(--primary)" stroke-width="1.3"><rect x="7" y="7" width="18" height="18"></rect><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"></rect></g></svg>
-        </span>
-        <p class="eyebrow">Leave a blessing</p>
-        <h2 class="section-title" id="wishes-title">Dua &amp; Wishes</h2>
-        <div class="rule" aria-hidden="true"><span class="diamond"></span></div>
-        <p class="lede">Share a prayer or a warm wish for Imran &amp; Dhiya. Your words will appear on the wall below.</p>
-      </div>
-
-      <form class="card card--arch" id="wishForm" style="margin-top:1.8rem;" novalidate>
-        <div class="field">
-          <label for="wishName">Your name</label>
-          <input class="input" type="text" id="wishName" name="wishName" required autocomplete="name" />
-        </div>
-        <div class="field">
-          <label for="wishText">Your dua or wish</label>
-          <textarea class="textarea" id="wishText" name="wishText" required placeholder="May Allah bless this union with love, patience and barakah…"></textarea>
-        </div>
-        <div class="btn-row" style="justify-content:flex-start;">
-          <button class="btn btn--sage" type="submit">Add my blessing</button>
-        </div>
-        <div class="form-status" id="wishStatus" hidden role="status" aria-live="polite"></div>
-      </form>
-
-      <p class="wishes-empty" id="wishesEmpty">Be the first to leave a blessing.</p>
-      <ul class="wishes-list" id="wishesList" aria-label="Blessings from guests"></ul>
-    </div>
-  </section>
 
 </main>
 
@@ -1242,92 +1163,6 @@ let entrancePlayed = false;
 })();
 
 /* =====================================================================
-   TRAVEL & DIRECTIONS
-   - "Use my location": Geolocation API + haversine to venue lat/lng.
-   - Typed city: general guidance + Google Maps directions link.
-   - "Get directions": opens Google Maps directions to the venue.
-   ===================================================================== */
-(function travel() {
-  const out       = $('#travelOut');
-  const cityInput = $('#startCity');
-  const locBtn    = $('#useLocationBtn');
-  const dirBtn    = $('#getDirectionsBtn');
-
-  // Destination string used in Google Maps directions URLs
-  function destination() {
-    if (CONFIG.venueLatLng) return CONFIG.venueLatLng.lat + ',' + CONFIG.venueLatLng.lng;
-    return CONFIG.venueName;
-  }
-  function directionsUrl(origin) {
-    const u = new URL('https://www.google.com/maps/dir/');
-    u.searchParams.set('api', '1');
-    if (origin) u.searchParams.set('origin', origin);
-    u.searchParams.set('destination', destination());
-    u.searchParams.set('travelmode', 'driving');
-    return u.toString();
-  }
-
-  function show(html) { out.hidden = false; out.innerHTML = html; }
-
-  // Haversine great-circle distance (km)
-  function haversine(lat1, lon1, lat2, lon2) {
-    const R = 6371, toRad = d => d * Math.PI / 180;
-    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  }
-
-  // Get directions (typed city or generic)
-  dirBtn.addEventListener('click', () => {
-    const origin = cityInput.value.trim();
-    const url = directionsUrl(origin || '');
-    show(
-      (origin
-        ? 'Opening driving directions from <strong>' + escapeHtml(origin) + '</strong> to ' + escapeHtml(CONFIG.venueName) + '.'
-        : 'Opening Google Maps directions to <strong>' + escapeHtml(CONFIG.venueName) + '</strong>. Add your starting city above for a from-here route.') +
-      '<div class="btn-row" style="justify-content:flex-start;margin-top:.9rem;">' +
-        '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + url + '">Open directions<span class="sr-only"> (opens in a new tab)</span></a>' +
-      '</div>'
-    );
-    window.open(url, '_blank', 'noopener');
-  });
-
-  // Use my location -> distance estimate
-  locBtn.addEventListener('click', () => {
-    if (!('geolocation' in navigator)) {
-      show('Your browser does not support location. Please type your city above and tap “Get directions”.');
-      return;
-    }
-    show('Locating you…');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        let distLine = '';
-        if (CONFIG.venueLatLng) {
-          const km = haversine(latitude, longitude, CONFIG.venueLatLng.lat, CONFIG.venueLatLng.lng);
-          distLine = 'You are approximately <strong>' + Math.round(km) +
-            ' km</strong> (straight-line) from ' + escapeHtml(CONFIG.venueName) + '. Actual road distance will be a little longer.';
-        } else {
-          distLine = 'We found your location. (Add <code>CONFIG.venueLatLng</code> for a distance estimate.) Here are live directions to ' + escapeHtml(CONFIG.venueName) + '.';
-        }
-        const url = directionsUrl(latitude + ',' + longitude);
-        show(
-          distLine +
-          '<div class="btn-row" style="justify-content:flex-start;margin-top:.9rem;">' +
-            '<a class="btn btn--primary" target="_blank" rel="noopener" href="' + url + '">Open live directions<span class="sr-only"> (opens in a new tab)</span></a>' +
-          '</div>'
-        );
-      },
-      () => {
-        show('We couldn’t access your location. Please type your city above and tap “Get directions”.');
-      },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
-    );
-  });
-})();
-
-/* =====================================================================
    RSVP — submits the form to the backend API (your VPS) which stores it
    in SQLite. Set CONFIG.apiBaseUrl. No third-party accounts, no storage.
    ===================================================================== */
@@ -1421,153 +1256,6 @@ let entrancePlayed = false;
       submitBtn.disabled = false;
       submitBtn.textContent = label;
     }
-  });
-})();
-
-/* =====================================================================
-   SAVE THE DATE — Google Calendar link + downloadable .ics with VALARM.
-   Dates use the fixed UTC 'Z' stamps from CONFIG.
-   ===================================================================== */
-(function saveTheDate() {
-  const details = 'Wedding celebration of ' + CONFIG.groom + ' & ' + CONFIG.bride +
-    '. ' + CONFIG.timeLabel + ' IST. ' + CONFIG.closingLine;
-
-  // --- Google Calendar link ---
-  const gcal = new URL('https://calendar.google.com/calendar/render');
-  gcal.searchParams.set('action', 'TEMPLATE');
-  gcal.searchParams.set('text', CONFIG.eventTitle);
-  gcal.searchParams.set('dates', CONFIG.icsStart + '/' + CONFIG.icsEnd);
-  gcal.searchParams.set('details', details);
-  gcal.searchParams.set('location', CONFIG.venueName);
-  $('#gcalBtn').href = gcal.toString();
-
-  // --- .ics generation ---
-  function pad(n){ return String(n).padStart(2,'0'); }
-  function dtStamp() {
-    const d = new Date();
-    return d.getUTCFullYear() + pad(d.getUTCMonth()+1) + pad(d.getUTCDate()) + 'T' +
-           pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + 'Z';
-  }
-  function icsEscape(s){ return String(s).replace(/([,;\\])/g,'\\$1').replace(/\n/g,'\\n'); }
-
-  function buildICS() {
-    const uid = 'imran-dhiya-' + CONFIG.icsStart + '@wedding.invite';
-    const lines = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Imran & Dhiya//Wedding Invitation//EN',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-      'BEGIN:VEVENT',
-      'UID:' + uid,
-      'DTSTAMP:' + dtStamp(),
-      'DTSTART:' + CONFIG.icsStart,   // 20260803T053000Z
-      'DTEND:' + CONFIG.icsEnd,       // 20260803T093000Z
-      'SUMMARY:' + icsEscape(CONFIG.eventTitle),
-      'DESCRIPTION:' + icsEscape(details),
-      'LOCATION:' + icsEscape(CONFIG.venueName),
-      'STATUS:CONFIRMED',
-      'TRANSP:OPAQUE',
-      // Reminder 1 day before
-      'BEGIN:VALARM',
-      'ACTION:DISPLAY',
-      'DESCRIPTION:' + icsEscape('Tomorrow: ' + CONFIG.eventTitle),
-      'TRIGGER:-P1D',
-      'END:VALARM',
-      // Reminder 2 hours before
-      'BEGIN:VALARM',
-      'ACTION:DISPLAY',
-      'DESCRIPTION:' + icsEscape('Soon: ' + CONFIG.eventTitle),
-      'TRIGGER:-PT2H',
-      'END:VALARM',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ];
-    // RFC 5545 line endings
-    return lines.join('\r\n');
-  }
-
-  $('#icsBtn').addEventListener('click', () => {
-    const blob = new Blob([buildICS()], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Imran-and-Dhiya-Wedding.ics';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  });
-})();
-
-/* =====================================================================
-   DUA / WISHES WALL — in-memory array only (NO storage).
-   ===================================================================== */
-(function wishes() {
-  const form   = $('#wishForm');
-  const listEl = $('#wishesList');
-  const empty  = $('#wishesEmpty');
-  const status = $('#wishStatus');
-  const nameEl = $('#wishName');
-  const textEl = $('#wishText');
-
-  // In-memory store (cleared on reload — no persistence by design)
-  const wishStore = [];
-
-  function render() {
-    listEl.innerHTML = '';
-    if (wishStore.length === 0) { empty.hidden = false; return; }
-    empty.hidden = true;
-    // newest first
-    wishStore.slice().reverse().forEach(w => {
-      const li = document.createElement('li');
-      li.className = 'wish';
-      const p = document.createElement('p');
-      p.className = 'wish__text';
-      p.textContent = '“' + w.text + '”';
-      const by = document.createElement('div');
-      by.className = 'wish__by';
-      by.textContent = '— ' + w.name;
-      li.appendChild(p); li.appendChild(by);
-      listEl.appendChild(li);
-    });
-  }
-
-  // Tie validation errors to their control (WCAG 3.3.1). status has id="wishStatus".
-  function markInvalid(field) {
-    field.setAttribute('aria-invalid', 'true');
-    field.setAttribute('aria-describedby', 'wishStatus');
-  }
-  function clearInvalid() {
-    [nameEl, textEl].forEach(f => {
-      f.removeAttribute('aria-invalid');
-      f.removeAttribute('aria-describedby');
-    });
-  }
-  // Clear the invalid state as soon as the user edits either field.
-  nameEl.addEventListener('input', clearInvalid);
-  textEl.addEventListener('input', clearInvalid);
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = nameEl.value.trim();
-    const text = textEl.value.trim();
-    if (!name || !text) {
-      status.hidden = false;
-      status.innerHTML = 'Please add both your name and a wish.';
-      clearInvalid();
-      const bad = !name ? nameEl : textEl;
-      markInvalid(bad);
-      bad.focus();
-      return;
-    }
-    clearInvalid();
-    wishStore.push({ name, text });   // stored as plain values; rendered via textContent (XSS-safe)
-    render();
-    form.reset();
-    status.hidden = false;
-    status.innerHTML = 'JazakAllah khair, <strong>' + escapeHtml(name) + '</strong>! Your blessing has been added below.';
-    nameEl.focus();
   });
 })();
 
