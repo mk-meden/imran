@@ -21,6 +21,9 @@
     --radius:16px; --shadow:0 8px 30px rgba(46,51,46,.07);
   }
   *,*::before,*::after{box-sizing:border-box}
+  /* The hidden attribute must win over display:grid/flex set by classes below,
+     otherwise the login card stays visible after login. */
+  [hidden]{display:none !important}
   html{-webkit-text-size-adjust:100%}
   body{
     margin:0; background:var(--bg); color:var(--ink);
