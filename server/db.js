@@ -35,6 +35,31 @@ async function init() {
       ip         TEXT
     );
   `);
+
+  // --- Migration: dedupe RSVPs by phone number ---------------------------
+  // phone_key = the phone with all non-digits stripped (so "98765 43210" and
+  // "9876543210" collide). A UNIQUE index on it lets the API upsert by phone.
+  await pool.query(`ALTER TABLE rsvp ADD COLUMN IF NOT EXISTS phone_key  TEXT;`);
+  await pool.query(`ALTER TABLE rsvp ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;`);
+
+  // Backfill phone_key for any existing rows (blank -> NULL: the unique index
+  // ignores NULLs, so rows without a phone never collide).
+  await pool.query(`
+    UPDATE rsvp
+       SET phone_key = NULLIF(right(regexp_replace(COALESCE(phone,''), '\\D', '', 'g'), 10), '')
+     WHERE phone_key IS NULL;
+  `);
+
+  // If duplicates already exist, keep the newest per phone_key so the unique
+  // index below can be created (idempotent no-op when there are none).
+  await pool.query(`
+    DELETE FROM rsvp a USING rsvp b
+     WHERE a.phone_key IS NOT NULL
+       AND a.phone_key = b.phone_key
+       AND a.id < b.id;
+  `);
+
+  await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS uniq_rsvp_phone_key ON rsvp (phone_key);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_rsvp_created ON rsvp (created_at);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_rsvp_attending ON rsvp (attending);`);
 }

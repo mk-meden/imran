@@ -844,7 +844,7 @@
             </div>
             <div class="field">
               <label for="rsvpPhone">Phone / WhatsApp</label>
-              <input class="input" type="tel" id="rsvpPhone" name="phone" inputmode="tel" autocomplete="tel" />
+              <input class="input" type="tel" id="rsvpPhone" name="phone" inputmode="tel" autocomplete="tel" required />
             </div>
           </div>
 
@@ -873,7 +873,7 @@
         </div>
 
         <div class="form-status" id="rsvpStatus" hidden role="status" aria-live="polite"></div>
-        <p class="form-note">Your RSVP is sent securely to the couple &mdash; you&rsquo;ll see a confirmation here. No account needed.</p>
+        <p class="form-note">Your RSVP is saved securely to the couple &mdash; one per phone number. Submitting again with the same number simply updates your reply.</p>
       </form>
     </div>
   </section>
@@ -1172,14 +1172,15 @@ let entrancePlayed = false;
 })();
 
 /* =====================================================================
-   RSVP — submits the form to the backend API (your VPS) which stores it
-   in SQLite. Set CONFIG.apiBaseUrl. No third-party accounts, no storage.
+   RSVP — submits the form to the backend API (Render + Postgres). Phone is
+   required and is the dedupe key: a repeat submission updates the existing RSVP.
    ===================================================================== */
 (function rsvp() {
   const form      = $('#rsvpForm');
   const status    = $('#rsvpStatus');
   const submitBtn = $('#rsvpSubmit');
   const nameField = $('#rsvpName');
+  const phoneField = $('#rsvpPhone');
 
   function gather() {
     return {
@@ -1197,10 +1198,13 @@ let entrancePlayed = false;
     field.setAttribute('aria-describedby', 'rsvpStatus');
   }
   function clearInvalid() {
-    nameField.removeAttribute('aria-invalid');
-    nameField.removeAttribute('aria-describedby');
+    [nameField, phoneField].forEach(function (f) {
+      f.removeAttribute('aria-invalid');
+      f.removeAttribute('aria-describedby');
+    });
   }
   nameField.addEventListener('input', clearInvalid);
+  phoneField.addEventListener('input', clearInvalid);
 
   // Show a status message; tint the border green (ok) or blush (error).
   function show(html, isError) {
@@ -1214,6 +1218,12 @@ let entrancePlayed = false;
       show('Please enter your name so we know who is replying.', true);
       markInvalid(nameField);
       nameField.focus();
+      return false;
+    }
+    if ((d.phone || '').replace(/\D/g, '').length < 7) {
+      show('Please add your phone / WhatsApp number — it&rsquo;s how we confirm your RSVP and keeps you from being listed twice.', true);
+      markInvalid(phoneField);
+      phoneField.focus();
       return false;
     }
     clearInvalid();
@@ -1251,11 +1261,17 @@ let entrancePlayed = false;
         body: JSON.stringify(d)
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => ({}));
       form.reset();
-      const warm = /unable/i.test(d.attending)
-        ? 'Thank you for letting us know, <strong>' + escapeHtml(d.name) + '</strong>. You\'ll be missed — we\'re grateful for your prayers.'
-        : 'Thank you, <strong>' + escapeHtml(d.name) + '</strong>! Your RSVP is received. We can\'t wait to celebrate with you, Insha Allah.';
+      const who = escapeHtml(d.name);
+      let warm;
+      if (data.updated) {
+        warm = 'Thank you, <strong>' + who + '</strong> — we&rsquo;ve updated your RSVP.';
+      } else if (/unable/i.test(d.attending)) {
+        warm = 'Thank you for letting us know, <strong>' + who + '</strong>. You\'ll be missed — we\'re grateful for your prayers.';
+      } else {
+        warm = 'Thank you, <strong>' + who + '</strong>! Your RSVP is received. We can\'t wait to celebrate with you, Insha Allah.';
+      }
       show(warm, false);
     } catch (err) {
       show('Sorry — we couldn\'t submit your RSVP just now. Please try again in a moment, or reach us on <strong>' +

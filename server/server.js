@@ -107,6 +107,16 @@ app.post('/api/rsvp', rateLimit({ windowMs: 3600_000, max: 30 }), asyncH(async (
   const name = clip(b.name, 120);
   if (!name) return res.status(400).json({ ok: false, error: 'Name is required.' });
 
+  // Phone is required and is the dedupe key: the same number updates the
+  // existing RSVP instead of creating a duplicate. phone_key = digits only.
+  const phone = clip(b.phone, 40);
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 7) {
+    return res.status(400).json({ ok: false, error: 'A valid phone / WhatsApp number is required.' });
+  }
+  // Key on the last 10 digits so "9876543210" and "+91 98765 43210" match.
+  const phoneKey = digits.slice(-10);
+
   let guests = parseInt(b.guests, 10);
   if (!Number.isFinite(guests) || guests < 1) guests = 1;
   if (guests > 50) guests = 50;
@@ -115,13 +125,23 @@ app.post('/api/rsvp', rateLimit({ windowMs: 3600_000, max: 30 }), asyncH(async (
   const raw = clip(b.attending, 40);
   const attending = /unable|won'?t|can'?t|\bno\b|not/i.test(raw) ? 'Unable to attend' : 'Yes, joyfully';
 
+  // Upsert by phone_key: a repeat submission from the same number updates the row.
   const { rows } = await pool.query(
-    `INSERT INTO rsvp (name, phone, guests, attending, message, ip)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING id`,
-    [name, clip(b.phone, 40), guests, attending, clip(b.message, 2000), clientIp(req).slice(0, 45)]
+    `INSERT INTO rsvp (name, phone, phone_key, guests, attending, message, ip, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+     ON CONFLICT (phone_key) DO UPDATE SET
+       name       = EXCLUDED.name,
+       phone      = EXCLUDED.phone,
+       guests     = EXCLUDED.guests,
+       attending  = EXCLUDED.attending,
+       message    = EXCLUDED.message,
+       ip         = EXCLUDED.ip,
+       updated_at = now()
+     RETURNING id, (xmax = 0) AS inserted`,
+    [name, phone, phoneKey, guests, attending, clip(b.message, 2000), clientIp(req).slice(0, 45)]
   );
-  res.status(201).json({ ok: true, id: rows[0].id });
+  const row = rows[0];
+  res.status(row.inserted ? 201 : 200).json({ ok: true, id: row.id, updated: !row.inserted });
 }));
 
 // Admin: full guest list
