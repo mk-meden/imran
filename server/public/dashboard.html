@@ -121,23 +121,8 @@
 </head>
 <body>
 
-<!-- ======================= LOGIN ======================= -->
-<section class="login-wrap" id="login">
-  <form class="login" id="loginForm" autocomplete="off">
-    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="#1F5F5B" stroke-width="1.5"><rect x="7" y="7" width="18" height="18"/><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"/></g></svg>
-    <h1>RSVP Dashboard</h1>
-    <p>Imran &amp; Dhiya · enter the admin password to view live responses.</p>
-    <div class="field">
-      <label for="pw">Admin password</label>
-      <input type="password" id="pw" autocomplete="current-password" required />
-    </div>
-    <button class="btn" type="submit" id="loginBtn">View dashboard</button>
-    <div class="err" id="loginErr" role="alert" aria-live="polite"></div>
-  </form>
-</section>
-
-<!-- ======================= DASHBOARD ======================= -->
-<main class="wrap" id="dash" hidden>
+<!-- ======================= DASHBOARD (public — no login) ======================= -->
+<main class="wrap" id="dash">
   <div class="top">
     <div>
       <h1>Wedding RSVPs</h1>
@@ -146,7 +131,6 @@
     <div class="top-actions">
       <span class="live"><span class="dot" aria-hidden="true"></span><span id="updated">live</span></span>
       <button class="btn--ghost" id="csvBtn" type="button">Export CSV</button>
-      <button class="btn--ghost" id="logoutBtn" type="button">Log out</button>
     </div>
   </div>
 
@@ -191,8 +175,7 @@
 <script>
 (function(){
   'use strict';
-  // ---- state (in memory only; token is never persisted) ----
-  var token = '';
+  // ---- state (in memory) ----
   var entries = [];
   var stats = null;
   var pollTimer = null;
@@ -200,49 +183,14 @@
 
   var $ = function(id){ return document.getElementById(id); };
 
-  // ---- API helper (same-origin) ----
+  // ---- API helper (same-origin, public — no auth) ----
   function api(path){
-    return fetch(path, { headers: { 'Authorization': 'Bearer ' + token } })
+    return fetch(path)
       .then(function(r){
-        if (r.status === 401){ logout('Session expired — please log in again.'); throw new Error('unauthorized'); }
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       });
   }
-
-  // ---- login ----
-  $('loginForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    var pw = $('pw').value;
-    if (!pw) return;
-    token = pw;
-    $('loginErr').textContent = '';
-    $('loginBtn').disabled = true; $('loginBtn').textContent = 'Checking…';
-    fetch('/api/verify', { headers: { 'Authorization': 'Bearer ' + token } })
-      .then(function(r){
-        if (r.ok) { enterDashboard(); }
-        else { token=''; $('loginErr').textContent = 'Incorrect password. Please try again.'; }
-      })
-      .catch(function(){ token=''; $('loginErr').textContent = 'Could not reach the server. Check it is running.'; })
-      .finally(function(){ $('loginBtn').disabled = false; $('loginBtn').textContent = 'View dashboard'; });
-  });
-
-  function enterDashboard(){
-    $('login').hidden = true;
-    $('dash').hidden = false;
-    $('pw').value = '';
-    loadAll();
-    pollTimer = setInterval(function(){ loadAll(true); }, 8000);
-  }
-
-  function logout(msg){
-    token=''; entries=[]; stats=null;
-    if (pollTimer){ clearInterval(pollTimer); pollTimer=null; }
-    $('dash').hidden = true;
-    $('login').hidden = false;
-    $('loginErr').textContent = msg || '';
-  }
-  $('logoutBtn').addEventListener('click', function(){ logout(''); });
 
   // ---- load + render ----
   function loadAll(silent){
@@ -364,6 +312,10 @@
     var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()+', '+pad(d.getHours())+':'+pad(d.getMinutes());
   }
+
+  // ---- start immediately (public dashboard, no login) ----
+  loadAll();
+  pollTimer = setInterval(function(){ loadAll(true); }, 8000);
 })();
 </script>
 </body>

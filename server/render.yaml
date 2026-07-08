@@ -1,7 +1,6 @@
 # Render Blueprint (optional one-click deploy).
 # In Render: New + -> Blueprint -> connect this repo. Render reads this file.
-# You still set DATABASE_URL and ADMIN_TOKEN in the dashboard (they're marked
-# sync:false so they are not stored in git).
+# You still set DATABASE_URL in the dashboard (marked sync:false so it's not in git).
 services:
   - type: web
     name: wedding-rsvp
@@ -16,5 +15,3 @@ services:
         value: https://mk-meden.github.io
       - key: DATABASE_URL
         sync: false          # paste your Neon connection string in the dashboard
-      - key: ADMIN_TOKEN
-        sync: false          # paste a long random secret (openssl rand -hex 24)

@@ -1,33 +1,24 @@
 'use strict';
 /**
- * Wedding RSVP API + admin dashboard.
+ * Wedding RSVP API + public dashboard.
  *
- *   POST /api/rsvp      public  — store one RSVP  (rate-limited, CORS-guarded)
- *   GET  /api/rsvp      admin   — list all entries (Bearer ADMIN_TOKEN)
- *   GET  /api/stats     admin   — live counts
- *   GET  /api/verify    admin   — check the admin token (dashboard login)
- *   GET  /dashboard     public  — the dashboard page (data itself is token-gated)
- *   GET  /health        public  — health check
+ *   POST /api/rsvp      store one RSVP  (rate-limited, CORS-guarded)
+ *   GET  /api/rsvp      list all entries
+ *   GET  /api/stats     live counts
+ *   GET  /dashboard     the dashboard page (public — anyone with the link)
+ *   GET  /health        health check
  *
  * Config via env (see .env.example):
- *   PORT, DATABASE_URL, ADMIN_TOKEN, ALLOWED_ORIGIN
+ *   PORT, DATABASE_URL, ALLOWED_ORIGIN
  */
 const path = require('path');
-const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const { pool, init } = require('./db');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
-// .trim() guards against a trailing newline/space pasted into the host's env
-// var field (a very common cause of "correct password rejected").
-const ADMIN_TOKEN = (process.env.ADMIN_TOKEN || '').trim();
 const ALLOWED_ORIGIN = (process.env.ALLOWED_ORIGIN || '*')
   .split(',').map(s => s.trim()).filter(Boolean);
-
-if (!ADMIN_TOKEN) {
-  console.warn('[warn] ADMIN_TOKEN is not set — admin endpoints and the dashboard will refuse access until you set it.');
-}
 
 const app = express();
 app.disable('x-powered-by');
@@ -82,22 +73,6 @@ function clip(v, max) {
   if (v === undefined || v === null) return '';
   return String(v).replace(/\s+/g, ' ').trim().slice(0, max);
 }
-function safeEqual(a, b) {
-  const ab = Buffer.from(String(a));
-  const bb = Buffer.from(String(b));
-  if (ab.length !== bb.length) return false;
-  return crypto.timingSafeEqual(ab, bb);
-}
-function requireAdmin(req, res, next) {
-  if (!ADMIN_TOKEN) return res.status(503).json({ ok: false, error: 'Server not configured: ADMIN_TOKEN missing.' });
-  const hdr = req.get('authorization') || '';
-  const token = (hdr.startsWith('Bearer ') ? hdr.slice(7) : (req.get('x-admin-token') || '')).trim();
-  if (!token || !safeEqual(token, ADMIN_TOKEN)) {
-    return res.status(401).json({ ok: false, error: 'Unauthorized' });
-  }
-  next();
-}
-
 /* ----------------------------------------------------------------- routes */
 app.get('/health', (req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 
@@ -144,8 +119,8 @@ app.post('/api/rsvp', rateLimit({ windowMs: 3600_000, max: 30 }), asyncH(async (
   res.status(row.inserted ? 201 : 200).json({ ok: true, id: row.id, updated: !row.inserted });
 }));
 
-// Admin: full guest list
-app.get('/api/rsvp', requireAdmin, asyncH(async (req, res) => {
+// Public: full guest list
+app.get('/api/rsvp', asyncH(async (req, res) => {
   const { rows } = await pool.query(
     `SELECT id, name, phone, guests, attending, message, created_at
      FROM rsvp ORDER BY id DESC`
@@ -153,8 +128,8 @@ app.get('/api/rsvp', requireAdmin, asyncH(async (req, res) => {
   res.json({ ok: true, entries: rows });
 }));
 
-// Admin: live aggregate counts (one round-trip)
-app.get('/api/stats', requireAdmin, asyncH(async (req, res) => {
+// Public: live aggregate counts (one round-trip)
+app.get('/api/stats', asyncH(async (req, res) => {
   const { rows } = await pool.query(`
     SELECT
       COUNT(*)::int                                                                AS total,
@@ -176,10 +151,7 @@ app.get('/api/stats', requireAdmin, asyncH(async (req, res) => {
   });
 }));
 
-// Admin: token check (used by dashboard login)
-app.get('/api/verify', requireAdmin, (req, res) => res.json({ ok: true }));
-
-// The dashboard page (static). Its data is protected by the token, not the page.
+// The dashboard page (static, public).
 app.get(['/dashboard', '/dashboard/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
