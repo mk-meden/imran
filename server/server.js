@@ -19,7 +19,9 @@ const cors = require('cors');
 const { pool, init } = require('./db');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
+// .trim() guards against a trailing newline/space pasted into the host's env
+// var field (a very common cause of "correct password rejected").
+const ADMIN_TOKEN = (process.env.ADMIN_TOKEN || '').trim();
 const ALLOWED_ORIGIN = (process.env.ALLOWED_ORIGIN || '*')
   .split(',').map(s => s.trim()).filter(Boolean);
 
@@ -89,7 +91,7 @@ function safeEqual(a, b) {
 function requireAdmin(req, res, next) {
   if (!ADMIN_TOKEN) return res.status(503).json({ ok: false, error: 'Server not configured: ADMIN_TOKEN missing.' });
   const hdr = req.get('authorization') || '';
-  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : (req.get('x-admin-token') || '');
+  const token = (hdr.startsWith('Bearer ') ? hdr.slice(7) : (req.get('x-admin-token') || '')).trim();
   if (!token || !safeEqual(token, ADMIN_TOKEN)) {
     return res.status(401).json({ ok: false, error: 'Unauthorized' });
   }
