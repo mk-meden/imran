@@ -94,7 +94,7 @@ app.post('/api/rsvp', rateLimit({ windowMs: 3600_000, max: 30 }), asyncH(async (
 
   let guests = parseInt(b.guests, 10);
   if (!Number.isFinite(guests) || guests < 1) guests = 1;
-  if (guests > 50) guests = 50;
+  if (guests > 5) guests = 5;
 
   // Normalise attendance to two canonical values.
   const raw = clip(b.attending, 40);

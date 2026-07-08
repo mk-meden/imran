@@ -258,7 +258,9 @@
 
     list.forEach(function(e){
       var tr = document.createElement('tr');
-      tr.appendChild(td(String(e.id), 'num'));
+      // Sequential display number (1..N by arrival), not the raw DB id which
+      // has gaps after deletes.
+      tr.appendChild(td(String(entries.length - entries.indexOf(e)), 'num'));
       tr.appendChild(td(e.name || '—', 'name'));
       tr.appendChild(td(e.phone || '—'));
       tr.appendChild(td(String(e.guests || 1), 'num'));
@@ -285,9 +287,9 @@
 
   // ---- CSV export ----
   $('csvBtn').addEventListener('click', function(){
-    var head = ['id','name','phone','guests','attending','message','created_at'];
+    var head = ['no','name','phone','guests','attending','message','created_at'];
     var rows = entries.map(function(e){
-      return head.map(function(k){ return csv(e[k]); }).join(',');
+      return head.map(function(k){ return csv(k === 'no' ? (entries.length - entries.indexOf(e)) : e[k]); }).join(',');
     });
     var blob = new Blob([head.join(',') + '\n' + rows.join('\n')], { type:'text/csv;charset=utf-8' });
     var url = URL.createObjectURL(blob);

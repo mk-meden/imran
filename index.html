@@ -851,7 +851,7 @@
           <div class="col-2">
             <div class="field">
               <label for="rsvpGuests">Number of guests</label>
-              <input class="input" type="number" id="rsvpGuests" name="guests" min="1" max="20" value="1" />
+              <input class="input" type="number" id="rsvpGuests" name="guests" min="1" max="5" value="1" />
             </div>
             <div class="field">
               <label id="attendingLabel">Will you attend?</label>
@@ -952,19 +952,15 @@ const CONFIG = {
      TODO PLACEHOLDERS — fill these in before publishing
      ================================================================= */
 
-  // TODO: Google Maps EMBED link. In Google Maps: Share -> Embed a map -> copy the URL inside src="...".
-  //       Leave "" to keep the placeholder card. Example:
-  //       "https://www.google.com/maps/embed?pb=..."
-  mapsEmbedUrl: "", // TODO
+  // Google Maps EMBED link for the venue (Hayath Auditorium, Cherumukku).
+  mapsEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3916.221681029434!2d75.9237718!3d11.0219876!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba64d003f315549%3A0xf246cd8ef4226947!2sHAYATH%20AUDITORIUM!5e0!3m2!1sen!2sin!4v1783541260680!5m2!1sen!2sin",
 
   // TODO: Google Maps SHARE / place link for the "Open in Google Maps" button and directions.
   //       If left "", we fall back to a text search for the venue name.
   mapsShareUrl: "", // TODO
 
-  // TODO: Venue latitude/longitude for the haversine distance estimate & precise directions.
-  //       Get it from Google Maps: right-click the venue pin -> the first item is "lat, lng".
-  //       Example: { lat: 11.176, lng: 75.933 }
-  venueLatLng: null, // TODO  e.g. { lat: 11.1760, lng: 75.9330 }
+  // Venue coordinates (Hayath Auditorium) — used by the "Open in Google Maps" button.
+  venueLatLng: { lat: 11.0219876, lng: 75.9237718 },
 
   // TODO: RSVP backend API base URL — your VPS, over HTTPS (required: an HTTPS
   //       page cannot call an http:// or bare-IP endpoint). No trailing slash.
@@ -1186,7 +1182,7 @@ let entrancePlayed = false;
     return {
       name:      $('#rsvpName').value.trim(),
       phone:     $('#rsvpPhone').value.trim(),
-      guests:    parseInt($('#rsvpGuests').value, 10) || 1,
+      guests:    Math.max(1, Math.min(5, parseInt($('#rsvpGuests').value, 10) || 1)),
       attending: (form.querySelector('input[name="attending"]:checked') || {}).value || '',
       message:   $('#rsvpMsg').value.trim()
     };
