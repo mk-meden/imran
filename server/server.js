@@ -10,13 +10,13 @@
  *   GET  /health        public  — health check
  *
  * Config via env (see .env.example):
- *   PORT, DATA_DIR, ADMIN_TOKEN, ALLOWED_ORIGIN
+ *   PORT, DATABASE_URL, ADMIN_TOKEN, ALLOWED_ORIGIN
  */
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
-const db = require('./db');
+const { pool, init } = require('./db');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
@@ -29,7 +29,7 @@ if (!ADMIN_TOKEN) {
 
 const app = express();
 app.disable('x-powered-by');
-app.set('trust proxy', 1);                 // behind Cloudflare Tunnel: trust the single proxy hop
+app.set('trust proxy', 1);                 // behind Render's proxy: trust the single hop
 app.use(express.json({ limit: '16kb' }));  // small payloads only
 
 /* ------------------------------------------------------------------ CORS */
@@ -45,7 +45,8 @@ app.use(cors({
 }));
 
 /* ------------------------------------------------ tiny in-memory rate limit */
-// Real client IP: Cloudflare sets CF-Connecting-IP; fall back to socket/XFF.
+// Real client IP: Render/proxies set X-Forwarded-For (trust proxy handles it);
+// Cloudflare (if ever in front) sets CF-Connecting-IP.
 function clientIp(req) { return req.get('cf-connecting-ip') || req.ip || 'unknown'; }
 
 const hits = new Map(); // ip -> [timestamps]
@@ -72,6 +73,9 @@ setInterval(() => {
 }, 3600_000).unref();
 
 /* ---------------------------------------------------------------- helpers */
+// Wrap async route handlers so a rejected promise reaches the error middleware.
+const asyncH = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
 function clip(v, max) {
   if (v === undefined || v === null) return '';
   return String(v).replace(/\s+/g, ' ').trim().slice(0, max);
@@ -92,21 +96,11 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-/* --------------------------------------------------- prepared statements */
-const insertStmt = db.prepare(`
-  INSERT INTO rsvp (name, phone, guests, attending, message, created_at, ip)
-  VALUES (@name, @phone, @guests, @attending, @message, @created_at, @ip)
-`);
-const listStmt = db.prepare(`
-  SELECT id, name, phone, guests, attending, message, created_at
-  FROM rsvp ORDER BY id DESC
-`);
-
 /* ----------------------------------------------------------------- routes */
 app.get('/health', (req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 
 // Public: record an RSVP
-app.post('/api/rsvp', rateLimit({ windowMs: 3600_000, max: 30 }), (req, res) => {
+app.post('/api/rsvp', rateLimit({ windowMs: 3600_000, max: 30 }), asyncH(async (req, res) => {
   const b = req.body || {};
   const name = clip(b.name, 120);
   if (!name) return res.status(400).json({ ok: false, error: 'Name is required.' });
@@ -119,45 +113,46 @@ app.post('/api/rsvp', rateLimit({ windowMs: 3600_000, max: 30 }), (req, res) => 
   const raw = clip(b.attending, 40);
   const attending = /unable|won'?t|can'?t|\bno\b|not/i.test(raw) ? 'Unable to attend' : 'Yes, joyfully';
 
-  try {
-    const info = insertStmt.run({
-      name,
-      phone: clip(b.phone, 40),
-      guests,
-      attending,
-      message: clip(b.message, 2000),
-      created_at: new Date().toISOString(),
-      ip: clientIp(req).slice(0, 45)
-    });
-    res.status(201).json({ ok: true, id: info.lastInsertRowid });
-  } catch (err) {
-    console.error('insert failed:', err);
-    res.status(500).json({ ok: false, error: 'Could not save RSVP.' });
-  }
-});
+  const { rows } = await pool.query(
+    `INSERT INTO rsvp (name, phone, guests, attending, message, ip)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING id`,
+    [name, clip(b.phone, 40), guests, attending, clip(b.message, 2000), clientIp(req).slice(0, 45)]
+  );
+  res.status(201).json({ ok: true, id: rows[0].id });
+}));
 
 // Admin: full guest list
-app.get('/api/rsvp', requireAdmin, (req, res) => {
-  res.json({ ok: true, entries: listStmt.all() });
-});
+app.get('/api/rsvp', requireAdmin, asyncH(async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT id, name, phone, guests, attending, message, created_at
+     FROM rsvp ORDER BY id DESC`
+  );
+  res.json({ ok: true, entries: rows });
+}));
 
-// Admin: live aggregate counts
-app.get('/api/stats', requireAdmin, (req, res) => {
-  const total = db.prepare('SELECT COUNT(*) n FROM rsvp').get().n;
-  const yes = db.prepare("SELECT COUNT(*) n FROM rsvp WHERE attending = 'Yes, joyfully'").get().n;
-  const no = db.prepare("SELECT COUNT(*) n FROM rsvp WHERE attending = 'Unable to attend'").get().n;
-  const guestsComing = db.prepare("SELECT COALESCE(SUM(guests),0) n FROM rsvp WHERE attending = 'Yes, joyfully'").get().n;
-  const latest = db.prepare('SELECT created_at FROM rsvp ORDER BY id DESC LIMIT 1').get();
+// Admin: live aggregate counts (one round-trip)
+app.get('/api/stats', requireAdmin, asyncH(async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT
+      COUNT(*)::int                                                                AS total,
+      (COUNT(*) FILTER (WHERE attending = 'Yes, joyfully'))::int                   AS "attendingYes",
+      (COUNT(*) FILTER (WHERE attending = 'Unable to attend'))::int                AS "attendingNo",
+      COALESCE(SUM(guests) FILTER (WHERE attending = 'Yes, joyfully'), 0)::int     AS "guestsComing",
+      MAX(created_at)                                                              AS latest
+    FROM rsvp
+  `);
+  const r = rows[0];
   res.json({
     ok: true,
-    total,
-    attendingYes: yes,
-    attendingNo: no,
-    guestsComing,
-    latest: latest ? latest.created_at : null,
+    total: r.total,
+    attendingYes: r.attendingYes,
+    attendingNo: r.attendingNo,
+    guestsComing: r.guestsComing,
+    latest: r.latest || null,
     serverTime: new Date().toISOString()
   });
-});
+}));
 
 // Admin: token check (used by dashboard login)
 app.get('/api/verify', requireAdmin, (req, res) => res.json({ ok: true }));
@@ -170,5 +165,24 @@ app.get('/', (req, res) => res.redirect('/dashboard'));
 
 app.use((req, res) => res.status(404).json({ ok: false, error: 'Not found' }));
 
-const server = app.listen(PORT, () => console.log(`RSVP server listening on :${PORT}  (origins: ${ALLOWED_ORIGIN.join(', ')})`));
-module.exports = server;
+// JSON error handler (async route failures land here)
+app.use((err, req, res, next) => {   // eslint-disable-line no-unused-vars
+  console.error('request failed:', err);
+  res.status(500).json({ ok: false, error: 'Server error.' });
+});
+
+/* ----------------------------------------------------------------- start */
+async function start() {
+  await init();                       // ensure the table exists before serving
+  return new Promise((resolve) => {
+    const server = app.listen(PORT, () =>
+      console.log(`RSVP server listening on :${PORT}  (origins: ${ALLOWED_ORIGIN.join(', ')})`));
+    resolve(server);
+  });
+}
+
+if (require.main === module) {
+  start().catch(err => { console.error('Startup failed:', err); process.exit(1); });
+}
+
+module.exports = { app, start };

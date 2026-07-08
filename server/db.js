@@ -1,33 +1,42 @@
 'use strict';
 /**
- * SQLite setup (better-sqlite3). One small file-based DB — perfect for a wedding
- * guest list. The DB file lives in DATA_DIR (a Docker volume in production so it
- * survives container rebuilds).
+ * Postgres setup (node-postgres). Works with any hosted Postgres — the default
+ * target is a free Neon database. The connection string comes from DATABASE_URL.
+ *
+ * Neon/most hosted Postgres require TLS; the connection string usually ends with
+ * `?sslmode=require`. We also enable ssl here for safety on non-local hosts.
  */
-const path = require('path');
-const fs = require('fs');
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
-fs.mkdirSync(DATA_DIR, { recursive: true });
+const connectionString = process.env.DATABASE_URL || '';
+if (!connectionString) {
+  console.warn('[warn] DATABASE_URL is not set — the server cannot store RSVPs until it is.');
+}
 
-const db = new Database(path.join(DATA_DIR, 'rsvp.db'));
-db.pragma('journal_mode = WAL');   // better concurrency for reads while writing
-db.pragma('foreign_keys = ON');
+const isLocal = /localhost|127\.0\.0\.1|::1/.test(connectionString);
+const pool = new Pool({
+  connectionString,
+  ssl: connectionString && !isLocal ? { rejectUnauthorized: false } : false,
+  max: 5,
+  idleTimeoutMillis: 30_000,
+});
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS rsvp (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    name       TEXT    NOT NULL,
-    phone      TEXT,
-    guests     INTEGER NOT NULL DEFAULT 1,
-    attending  TEXT    NOT NULL,
-    message    TEXT,
-    created_at TEXT    NOT NULL,   -- ISO 8601 UTC
-    ip         TEXT
-  );
-  CREATE INDEX IF NOT EXISTS idx_rsvp_created ON rsvp (created_at);
-  CREATE INDEX IF NOT EXISTS idx_rsvp_attending ON rsvp (attending);
-`);
+// Create the table + indexes if they don't exist yet (safe to run every boot).
+async function init() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS rsvp (
+      id         SERIAL PRIMARY KEY,
+      name       TEXT        NOT NULL,
+      phone      TEXT,
+      guests     INTEGER     NOT NULL DEFAULT 1,
+      attending  TEXT        NOT NULL,
+      message    TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      ip         TEXT
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_rsvp_created ON rsvp (created_at);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_rsvp_attending ON rsvp (attending);`);
+}
 
-module.exports = db;
+module.exports = { pool, init };

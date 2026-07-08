@@ -1,8 +1,4 @@
-# Secrets and data must never be committed
+# Secrets and local artifacts must never be committed
 .env
 node_modules/
-data/
-*.db
-*.db-shm
-*.db-wal
 npm-debug.log*

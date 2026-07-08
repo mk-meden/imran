@@ -1,119 +1,87 @@
 # Wedding RSVP — API + Live Dashboard
 
-A tiny, self-contained backend for the **Imran & Dhiya** wedding site:
+A small backend for the **Imran & Dhiya** wedding site:
 
-- `POST /api/rsvp` — the site's RSVP form submits here; each response is stored in **SQLite**.
-- `GET /dashboard` — a **password-protected** live dashboard showing the count of
-  responses, attendance split, guest headcount, and every entry (with search + CSV export).
+- `POST /api/rsvp` — the site's RSVP form submits here; each response is stored in **Postgres**.
+- `GET /dashboard` — a **password-protected** live dashboard: response count, attendance
+  split, guest headcount, and every entry (search + CSV export).
 
-Stack: **Node.js + Express + better-sqlite3**, published through a **Cloudflare Tunnel**
-(automatic HTTPS), run with **Docker Compose**. Guest data lives only on your VPS.
+Stack: **Node.js + Express + Postgres (`pg`)**, deployed on **Render** (free web service,
+automatic HTTPS) with a free **Neon** Postgres database. No servers to manage.
+
+```
+Guests ── https ──> Render web service (this app) ── TLS ──> Neon Postgres
+                         │
+                         └── /dashboard (you, with the admin password)
+```
 
 ---
 
-## Why a Cloudflare Tunnel (and how it coexists with Wazuh)
+## Step 1 — Create the database (Neon, free)
 
-Your VPS already runs **Wazuh**, whose dashboard owns **port 443** (and the manager/indexer
-use 1514/1515/55000/9200). A second web server can't also bind 443, and — since the site is
-served over HTTPS — the API must be HTTPS too.
+1. Sign up at **neon.tech** → **Create project** (any name/region near you).
+2. On the project dashboard, open **Connection string** and copy the **Pooled** connection
+   string. It looks like:
+   ```
+   postgresql://user:pass@ep-xxxx-pooler.REGION.aws.neon.tech/dbname?sslmode=require
+   ```
+   Keep it handy — it's your `DATABASE_URL`. (The app creates the `rsvp` table automatically
+   on first boot.)
 
-A Cloudflare Tunnel solves both **without opening any inbound port**:
+## Step 2 — Deploy the app on Render (free)
 
+1. Push this repo to GitHub (already done: `mk-meden/imran`).
+2. At **render.com** → **New + → Web Service** → connect the repo.
+3. Configure:
+   - **Root Directory:** `server`
+   - **Runtime:** Docker (auto-detected from `server/Dockerfile`)
+   - **Instance Type:** **Free**
+   - **Health Check Path:** `/health`
+4. **Environment variables** (Advanced → Add):
+   | Key | Value |
+   |-----|-------|
+   | `DATABASE_URL` | your Neon connection string from Step 1 |
+   | `ALLOWED_ORIGIN` | `https://mk-meden.github.io` (no trailing slash) |
+   | `ADMIN_TOKEN` | a long random secret — `openssl rand -hex 24` |
+5. **Create Web Service.** Render builds and deploys; you'll get a URL like
+   `https://wedding-rsvp.onrender.com`.
+
+> **One-click alternative:** `server/render.yaml` is a Blueprint. In Render use
+> **New + → Blueprint**, connect the repo, and it pre-fills everything except
+> `DATABASE_URL` and `ADMIN_TOKEN` (which you paste in).
+
+## Step 3 — Verify
+
+```bash
+curl https://wedding-rsvp.onrender.com/health      # -> {"ok":true,...}
 ```
-Internet ──HTTPS──> Cloudflare edge ──(outbound-only tunnel)──> VPS: cloudflared ──> app:3000 ──> SQLite
-```
+Open **`https://wedding-rsvp.onrender.com/dashboard`** and log in with your `ADMIN_TOKEN`.
 
-- The `app` container publishes **no host ports** — it's only reachable over the internal
-  Docker network, via `cloudflared`.
-- `cloudflared` makes an **outbound** connection to Cloudflare; **nothing new listens on the
-  public interface**, so Wazuh's ports are untouched and your attack surface doesn't grow.
-- HTTPS, DDoS protection, and your real VPS IP hiding come for free.
+## Step 4 — Connect the website
 
-Containers are further hardened: non-root user, `no-new-privileges`, and all Linux
-capabilities dropped.
+Tell me your Render URL and I'll set `apiBaseUrl` in [`../index.html`](../index.html) and push
+(Pages redeploys and the form goes live). Or do it yourself: set
+`apiBaseUrl: "https://wedding-rsvp.onrender.com"` in the `CONFIG` block, commit & push.
 
-**Requirement:** your domain must be on Cloudflare (free plan is fine — just point the
-domain's nameservers at Cloudflare).
+## Step 5 — Test end-to-end
+
+Submit a test RSVP on the live site → "Thank you" confirmation → refresh the dashboard and
+your entry + counts appear. 🎉
 
 ---
 
-## 1. Create the tunnel in Cloudflare
+## Free-tier note: cold starts
 
-1. Cloudflare **Zero Trust** dashboard → **Networks → Tunnels → Create a tunnel** → **Cloudflared**.
-2. Name it (e.g. `wedding-rsvp`) → **Save**. Choose **Docker** as the environment and **copy the token**
-   (the long string after `--token`). You'll paste it into `.env`.
-3. On the tunnel's **Public Hostnames** tab → **Add a public hostname**:
-   - **Subdomain:** `api`  · **Domain:** `yourdomain.com`  (→ `api.yourdomain.com`)
-   - **Service type:** `HTTP`  · **URL:** `app:3000`
+Render's **free** web service **sleeps after ~15 minutes of inactivity**; the next request
+wakes it, which can take **~30–60 seconds**. The form shows a "Sending…" state meanwhile, so
+it still works — it's just slow on that first hit. Two ways to avoid it:
 
-That's the whole routing config — the tunnel forwards `api.yourdomain.com` to the `app` container.
+- **Keep it warm (free):** add a free uptime monitor (e.g. UptimeRobot or cron-job.org) that
+  requests `https://wedding-rsvp.onrender.com/health` every ~10 minutes. One always-on free
+  service stays within Render's free monthly hours.
+- **Upgrade (paid):** Render **Starter ($7/mo)** is always-on with no cold starts.
 
-## 2. Get the files onto the VPS
-
-```bash
-git clone https://github.com/mk-meden/imran.git
-cd imran/server
-```
-
-## 3. Configure secrets
-
-```bash
-cp .env.example .env
-nano .env
-```
-
-| Var | Value |
-|-----|-------|
-| `TUNNEL_TOKEN` | the token you copied in step 1 |
-| `ALLOWED_ORIGIN` | `https://mk-meden.github.io` (your live site origin — no trailing slash) |
-| `ADMIN_TOKEN` | a long random secret — `openssl rand -hex 24` |
-
-> `.env` is git-ignored. **Never commit it.** `ADMIN_TOKEN` is also the dashboard password.
-
-## 4. Start
-
-```bash
-docker compose up -d --build
-```
-
-No firewall changes needed — **no inbound ports are opened**.
-
-## 5. Verify
-
-- In the Cloudflare Tunnels dashboard the tunnel shows **Healthy**.
-- From anywhere: `curl https://api.yourdomain.com/health`  → `{"ok":true,...}`
-- Confirm nothing new is listening publicly on the VPS (Wazuh's ports should be the only ones):
-  ```bash
-  sudo ss -tlnp | grep -E ':(80|443)'    # unchanged — only Wazuh, if anything
-  ```
-
-Open the dashboard: **`https://api.yourdomain.com/dashboard`** and enter your `ADMIN_TOKEN`.
-
-## 6. Connect the website
-
-In [`../index.html`](../index.html), set the one config value (top of the `<script>`, in `CONFIG`):
-
-```js
-apiBaseUrl: "https://api.yourdomain.com",   // no trailing slash
-```
-
-Commit & push — GitHub Pages redeploys, and the RSVP form saves straight to your VPS.
-Until this is set, the form shows a friendly "not live yet" message instead of erroring.
-
----
-
-## Everyday operations
-
-```bash
-docker compose logs -f app                # app logs
-docker compose logs -f cloudflared        # tunnel logs
-git pull && docker compose up -d --build  # update
-docker compose restart                    # restart
-docker compose down                       # stop (data volume kept)
-
-# Back up the guest list (SQLite DB lives in the rsvp_data volume)
-docker compose cp app:/app/data/rsvp.db ./rsvp-backup-$(date +%F).db
-```
+Your **data is safe regardless** — it lives in Neon, not on Render's disk.
 
 ---
 
@@ -128,31 +96,33 @@ docker compose cp app:/app/data/rsvp.db ./rsvp-backup-$(date +%F).db
 | `GET`  | `/dashboard` | none (data is token-gated) | the dashboard page |
 | `GET`  | `/health` | none | health check |
 
-Rate limit: 30 submissions per IP/hour (real client IP via Cloudflare's `CF-Connecting-IP`).
-Payloads capped at 16 KB; fields length-limited.
+Rate limit: 30 submissions per IP/hour. Payloads capped at 16 KB; fields length-limited.
 
 ---
 
 ## Security notes
 
-- **No inbound ports.** The API is reachable only through the Cloudflare Tunnel; the VPS
-  firewall/Wazuh setup is unchanged.
-- Guest data never leaves your VPS. The dashboard page is `noindex`; its data needs the token.
-- Containers run **non-root**, with `no-new-privileges` and **all capabilities dropped**.
-- Admin endpoints use timing-safe token comparison; the dashboard escapes every guest value
-  (no stored-XSS from a malicious note).
-- Keep `.env` private; use a long random `ADMIN_TOKEN`; rotate by editing `.env` and
-  `docker compose up -d`.
-- **Optional extra hardening:** put a Cloudflare **Access** policy in front of
-  `api.yourdomain.com/dashboard` (Zero Trust → Access → Applications) so the dashboard also
-  requires a Cloudflare login/one-time-PIN in addition to the admin password.
+- Guest data lives in your Neon database (TLS-only). The dashboard page is `noindex`; its data
+  requires the admin token.
+- CORS is locked to `ALLOWED_ORIGIN`. Admin endpoints use timing-safe token comparison. The
+  dashboard escapes every guest value (no stored-XSS from a malicious note).
+- Set env vars in the Render dashboard (secrets), never in the repo. Rotate `ADMIN_TOKEN` by
+  editing it in Render and redeploying.
 
 ---
 
-## Running without Docker (optional)
+## Backups & local run
 
+**Back up the guest list** (from any machine with `psql`):
+```bash
+pg_dump "$DATABASE_URL" -t rsvp > rsvp-backup.sql
+```
+
+**Run locally:**
 ```bash
 npm install
-DATA_DIR=./data ADMIN_TOKEN=your-secret ALLOWED_ORIGIN=https://mk-meden.github.io node server.js
-# then run `cloudflared tunnel run` (or your own HTTPS proxy) in front of localhost:3000
+DATABASE_URL="postgresql://...?sslmode=require" \
+ADMIN_TOKEN=your-secret \
+ALLOWED_ORIGIN=https://mk-meden.github.io \
+npm start                     # http://localhost:3000/dashboard
 ```
